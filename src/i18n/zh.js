@@ -367,7 +367,6 @@ export default {
   "Gemini can write an analysis of your numbers as they are now, including your task decisions and notes. The three tasks it says to do first and the dates it says to watch are then marked in Tasks and the Calendar. Nothing is sent anywhere unless you press \"Analyse with Gemini\" below.": "Gemini 可以按你现在的数字写分析，也会参考你的待办决定和备注。它说最该先做的三件事和要留意的日期，会自动标在待办和日历上。除非你按下面的「用 Gemini 分析」，否则什么都不会送出去。",
   "Start from a practice workbook": "从练习工作簿开始",
   "No file yet? Download a practice workbook (invented BetterSpace data) and open it to try the dashboard.": "还没有文件？下载一个练习工作簿（虚构的 BetterSpace 数据），打开它试用仪表盘。",
-  "The B2B workbook has account owners and follow-up dates; the B2C workbook does not. Either layout works.": "B2B 工作簿有客户负责人和跟进日期，B2C 工作簿没有。两种格式都可以用。",
   "Ask Gemini what these numbers mean and what to do first, with your own free key. Its answer is checked against your data.": "用你自己的免费钥匙，问 Gemini 这些数字代表什么、应该先做什么。它的回答会和你的数据核对。",
   "Open AI analysis": "打开 AI 分析",
   "{0} · Business dashboard": "{0} · 业务仪表盘",
@@ -619,4 +618,9 @@ export default {
   "This browser could not save the analysis, so its picks are not shown in Tasks or the Calendar.": "这个浏览器无法保存分析，所以它的建议没有显示在待办和日历上。",
   "This answer did not come in the expected form, so nothing was added to Tasks or the Calendar.": "这次的回答没有照指定的格式，所以没有加进待办和日历。",
   "The AI marks there are from the earlier analysis ({0}).": "那里的 AI 标记是之前那次分析（{0}）的。",
+  "Department": "部门",
+  "By department": "各部门",
+  "Orders in period": "本期订单数",
+  "Order value, orders and cash: selected period. Balances and pending work: as of the reporting date. Press a department to show only its records.": "金额、订单数和收款按所选期间；未收款和进行中按报告日期。按部门名称就只看那个部门。",
+  "The B2B workbook has account owners and follow-up dates; the B2C workbook does not. The Legal workbook (a law firm) adds a department column — 转名, 继承, 离婚 — and has no stock. Each layout works.": "B2B 工作簿有客户负责人和跟进日期，B2C 工作簿没有。Legal 工作簿（律师事务所）多了「部门」一列——转名、继承、离婚——没有库存。每种格式都可以用。",
 };

@@ -1,6 +1,6 @@
 import { h, add } from '../dom.js';
 import { pageHead, scopeBar, filterBar, tile, dataTable } from '../components.js';
-import { view, metrics, periodRange, reportingDate, records, label, labelTl, money, customerName, customerOwner } from '../view-state.js';
+import { view, metrics, periodRange, reportingDate, records, label, labelTl, money, customerName, customerOwner, departments } from '../view-state.js';
 import { saleDrawer } from '../drawers.js';
 import { formatDate } from '../../core/dates.js';
 import { tr } from '../../i18n/i18n.js';
@@ -17,6 +17,7 @@ export function renderSales() {
     holder.textContent = '';
     let rows = (records().sales || []).filter(s => s.date <= reportingDate());
     if (view.filters.channel) rows = rows.filter(s => (s.channel || '') === view.filters.channel);
+    if (view.filters.department) rows = rows.filter(s => (s.department || '') === view.filters.department);
     if (view.filters.owner) rows = rows.filter(s => customerOwner(s.customer_id) === view.filters.owner);
     if (scope === 'period') rows = rows.filter(s => s.date >= start && s.date <= end);
     if (statusSel.value) rows = rows.filter(s => s.status === statusSel.value);
@@ -25,6 +26,7 @@ export function renderSales() {
       { key: 'date', label: tr('Date'), text: r => formatDate(r.date), sortValue: r => r.date },
       { key: 'customer_id', label: label('customer', tr('Customer')), text: r => customerName(r.customer_id) },
       { key: 'description', label: tr('Description') },
+      ...(departments().length ? [{ key: 'department', label: label('department', tr('Department')) }] : []),
       { key: 'channel', label: label('channel', tr('Channel')) },
       { key: 'amount', label: tr('Amount'), num: true, text: r => money(r.amount) },
       { key: 'status', label: tr('Status'), text: r => r.status_text || r.status },

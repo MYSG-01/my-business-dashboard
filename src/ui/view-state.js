@@ -24,7 +24,7 @@ export const view = {
   taskView: 'open',
 };
 
-export function defaultFilters() { return { preset: 'mtd', start: '', end: '', channel: '', owner: '' }; }
+export function defaultFilters() { return { preset: 'mtd', start: '', end: '', channel: '', owner: '', department: '' }; }
 
 // null while no Excel file is open (pages are guarded in main.js).
 export const scenario = () => loadScenario();
@@ -52,7 +52,7 @@ export function periodRange() {
 // Figures for the selected period and filters.
 export function metrics() {
   const { start, end } = periodRange();
-  return computeMetrics(records(), reportingDate(), { periodStart: start, periodEnd: end, historyStart: scenario().historyStart, filters: { channel: view.filters.channel || undefined, owner: view.filters.owner || undefined } });
+  return computeMetrics(records(), reportingDate(), { periodStart: start, periodEnd: end, historyStart: scenario().historyStart, filters: { channel: view.filters.channel || undefined, owner: view.filters.owner || undefined, department: view.filters.department || undefined } });
 }
 
 // Suggestions depend on the scenario and the language only, so they are cached per
@@ -109,6 +109,9 @@ export function labelTl(key, fallbackEn) {
 }
 
 export function businessName(id = view.businessId) { const b = businessProfile(id).business; return (isZh() && b.name_zh) || b.name; }
+
+// Departments named in the Sales sheet's optional "department" column (none: no department filter).
+export function departments() { return [...new Set((records().sales || []).map(s => s.department).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh')); }
 
 export function customerName(id) { return (records().customers || []).find(c => c.id === id)?.name || id || ''; }
 export function customerOwner(id) { return (records().customers || []).find(c => c.id === id)?.owner || ''; }

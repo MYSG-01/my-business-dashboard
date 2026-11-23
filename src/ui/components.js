@@ -1,7 +1,7 @@
 // Reusable pieces shared by the pages (from the original template's app.js).
 
 import { h, t, add } from './dom.js';
-import { view, scenario, reportingDate, periodRange, records, label, money, defaultFilters, isExcel } from './view-state.js';
+import { view, scenario, reportingDate, periodRange, records, label, money, defaultFilters, isExcel, departments } from './view-state.js';
 import { rerender } from './router.js';
 import { formatDate } from '../core/dates.js';
 import { sourceCoverage } from '../core/mapping.js';
@@ -32,7 +32,7 @@ export function scopeBar({ period = true } = {}) {
     period ? t('div', tr('Period filters apply to order value, order count and cash collected. Balances, deadlines, follow-ups and stock are as-of measures and ignore the period.'), 'muted') : null);
 }
 
-export function filterBar({ channel = true, owner = true } = {}) {
+export function filterBar({ channel = true, owner = true, department = true } = {}) {
   const f = view.filters;
   const presets = [['mtd', tr('Month to date')], ['prev_month', tr('Previous month')], ['last7', tr('Last 7 days')], ['last30', tr('Last 30 days')], ['all', tr('All history')], ['custom', tr('Custom')]];
   const sel = h('select', { onchange: e => { f.preset = e.target.value; rerender(); } }, ...presets.map(([v, l]) => h('option', { value: v, selected: f.preset === v }, l)));
@@ -42,11 +42,13 @@ export function filterBar({ channel = true, owner = true } = {}) {
       h('label', {}, tr('From '), h('input', { type: 'date', value: f.start, min: scenario().historyStart, max: reportingDate(), onchange: e => { f.start = e.target.value; rerender(); } })),
       h('label', {}, tr('To '), h('input', { type: 'date', value: f.end, min: scenario().historyStart, max: reportingDate(), onchange: e => { f.end = e.target.value; rerender(); } })));
   }
+  const depts = departments();
+  if (department && depts.length) add(bar, h('label', {}, `${label('department', tr('Department'))} `, h('select', { onchange: e => { f.department = e.target.value; rerender(); } }, h('option', { value: '' }, tr('All')), ...depts.map(c => h('option', { value: c, selected: f.department === c }, c)))));
   const channels = [...new Set((records().sales || []).map(s => s.channel).filter(Boolean))].sort();
   if (channel && channels.length > 1) add(bar, h('label', {}, `${label('channel', tr('Channel'))} `, h('select', { onchange: e => { f.channel = e.target.value; rerender(); } }, h('option', { value: '' }, tr('All')), ...channels.map(c => h('option', { value: c, selected: f.channel === c }, c)))));
   const owners = [...new Set((records().customers || []).map(c => c.owner).filter(Boolean))].sort();
   if (owner && owners.length) add(bar, h('label', {}, `${label('owner', tr('Owner'))} `, h('select', { onchange: e => { f.owner = e.target.value; rerender(); } }, h('option', { value: '' }, tr('All')), ...owners.map(c => h('option', { value: c, selected: f.owner === c }, c)))));
-  if (f.preset !== 'mtd' || f.channel || f.owner) add(bar, h('button', { class: 'btn ghost small', onclick: () => { view.filters = defaultFilters(); rerender(); } }, tl('Reset filters')));
+  if (f.preset !== 'mtd' || f.channel || f.owner || f.department) add(bar, h('button', { class: 'btn ghost small', onclick: () => { view.filters = defaultFilters(); rerender(); } }, tl('Reset filters')));
   return bar;
 }
 

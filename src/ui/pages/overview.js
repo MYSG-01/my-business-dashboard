@@ -1,5 +1,6 @@
 import { h, t, add } from '../dom.js';
 import { pageHead, scopeBar, filterBar, tile, trendChart, hbars, statusChip } from '../components.js';
+import { rerender } from '../router.js';
 import { view, metrics, reportingDate, records, openTasks, label, money, absent } from '../view-state.js';
 import { formatDate } from '../../core/dates.js';
 import { tr, tl, getLocale } from '../../i18n/i18n.js';
@@ -24,6 +25,7 @@ export function renderOverview() {
   if ((records().customers || []).some(c => c.next_follow_up_date)) add(tiles, tile({ label: tr('Follow-ups'), value: String(m.overdue_follow_up_ids.length), foot: tr('recorded actions overdue · {0} due today · {1} unassigned prospects', m.follow_up_today_ids.length, m.unassigned_prospect_ids.length) }));
   if (m.negative_balance_count) add(tiles, tile({ label: tr('Data check'), value: String(m.negative_balance_count), foot: tr('sale(s) with receipts exceeding the amount — check the source'), cls: 'alert' }));
   add(root, tiles);
+  if (m.by_department.length) add(root, departmentCard(m));
 
   const grid = h('div', { class: 'grid cols-2' });
   add(grid, h('div', { class: 'card' }, t('h2', tr('Monthly order value')), t('div', tr('Eligible sales by sale date; the current month is partial.'), 'scope'), trendChart(m.trend, rd)));
@@ -37,4 +39,25 @@ export function renderOverview() {
     h('a', { href: '#brief' }, tl('Open AI analysis'))));
   add(root, grid);
   return root;
+}
+
+// One row per department (the Sales sheet's "department" column). Pressing a department's
+// name filters every page to it; the row of the selected department is highlighted.
+function departmentCard(m) {
+  const f = view.filters;
+  const pick = d => { f.department = f.department === d ? '' : d; rerender(); };
+  const showPay = !absent('Payments');
+  const head = [tr('Department'), tr('Order value in period'), tr('Orders in period'), ...(showPay ? [tr('Cash collected in period'), tr('Outstanding balance'), tr('Overdue balance')] : []), tr('Pending completion')];
+  const totalValue = m.by_department.reduce((a, d) => a + d.period_order_value, 0);
+  return h('div', { class: 'card dept-card' },
+    t('h2', tr('By department')),
+    t('div', tr('Order value, orders and cash: selected period. Balances and pending work: as of the reporting date. Press a department to show only its records.'), 'scope'),
+    h('div', { class: 'table-wrap' }, h('table', {},
+      h('thead', {}, h('tr', {}, ...head.map((x, i) => h('th', { scope: 'col', class: i ? 'num' : '' }, x)))),
+      h('tbody', {}, ...m.by_department.map(d => h('tr', { class: f.department === d.department ? 'selected' : '' },
+        h('td', {}, h('button', { class: 'btn ghost small', 'aria-pressed': String(f.department === d.department), onclick: () => pick(d.department) }, d.department)),
+        h('td', { class: 'num' }, money(d.period_order_value), totalValue ? t('span', ` · ${Math.round(d.period_order_value / totalValue * 100)}%`, 'muted small') : null),
+        t('td', String(d.period_order_count), 'num'),
+        ...(showPay ? [t('td', money(d.period_cash_collected), 'num'), t('td', money(d.outstanding_balance), 'num'), t('td', money(d.overdue_balance), d.overdue_balance > 0 ? 'num alert-text' : 'num')] : []),
+        t('td', String(d.pending_count), 'num')))))));
 }

@@ -24,6 +24,7 @@ export function saleDrawer(sale) {
       t('dt', tr('Description')), t('dd', `${sale.description || '—'}${sale.quantity ? ` × ${sale.quantity}` : ''}`),
       t('dt', tr('Amount')), t('dd', money(sale.amount)),
       t('dt', tr('Status')), t('dd', `${sale.status_text || sale.status} (${tr(sale.status)})`),
+      ...(sale.department ? [t('dt', label('department', tr('Department'))), t('dd', sale.department)] : []),
       t('dt', tr('Channel')), t('dd', sale.channel || '—'),
       t('dt', tr('Payment due')), t('dd', sale.payment_due_date ? formatDate(sale.payment_due_date) : '—'),
       t('dt', tr('Promised completion')), t('dd', sale.promised_completion_date ? formatDate(sale.promised_completion_date) : '—'),

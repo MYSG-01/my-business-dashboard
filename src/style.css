@@ -206,6 +206,10 @@ th:first-child { border-radius: 10px 0 0 10px; } th:last-child { border-radius: 
 th.sorted::after { content: " ▾"; color: var(--muted); }
 th.sorted.asc::after { content: " ▴"; }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.dept-card { margin-bottom: 16px; }
+.dept-card tr.selected td { background: var(--brand-soft); color: var(--brand-ink); }
+.dept-card .btn { font-weight: 600; }
+td.alert-text { color: var(--critical); font-weight: 600; }
 tr.clickable { cursor: pointer; }
 tr.clickable:hover { background: var(--surface-2); }
 .empty { color: var(--muted); padding: 12px; text-align: center; }

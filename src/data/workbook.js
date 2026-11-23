@@ -13,6 +13,7 @@
 
 import readXlsxFile from '../vendor/read-excel-file.js';
 import { LAYOUTS } from './layouts.generated.js';
+import { PRACTICE_LAYOUT } from './practice-layout.js';
 import { ENTITIES, TASK_RULES } from '../core/model.js';
 import { applyTableMapping, relationalChecks, resolveReportingDate, hasErrors, findHeaderIndex, issue } from '../core/mapping.js';
 import { monthStart } from '../core/dates.js';
@@ -24,11 +25,12 @@ export const WORKBOOK_VERSION = 1;
 export const WORKBOOK_LIMITS = { bytes: 10 * 1024 * 1024, rowsPerSheet: 20000 };
 export const SHEETS = ['Customers', 'Sales', 'Payments', 'Stock'];
 
-// The full column layout is the B2B training workbook's (a superset of B2C's).
-const layout = () => LAYOUTS['betterspace-b2b'];
+// The full column layout is the B2B training workbook's (a superset of B2C's), plus the
+// optional "department" column (practice-layout.js).
+const layout = () => PRACTICE_LAYOUT;
 // Columns the B2C layout simply does not have (no account owners, no follow-ups):
 // leaving them out is normal, so it is not reported.
-const LAYOUT_OPTIONAL = new Set(['account_owner', 'next_follow_up_date']);
+const LAYOUT_OPTIONAL = new Set(['account_owner', 'next_follow_up_date', 'department']);
 
 // Which columns each sheet needs (for the format table on the page and for checks).
 export function workbookColumns() {
@@ -98,8 +100,8 @@ export function workbookProfile(fileName, sheets, businessName = SITE_CONFIG.bus
       id: MY_EXCEL,
       business: { name: name || 'My Excel', name_zh: name || '我的 Excel', short: businessName || 'My Excel', short_zh: businessName || '我的 Excel', model: '', industry: '', description: '', team: [], timezone: base.business.timezone, currency: base.business.currency, currency_symbol: base.business.currency_symbol, synthetic: false },
       period: {},
-      labels: { customers: 'Customers', customer: 'Customer', sales: 'Orders', sale: 'Order', payments: 'Payments', payment: 'Payment', stock: 'Stock', item: 'Product', owner: 'Owner', channel: 'Channel' },
-      labels_zh: { customers: '客户', customer: '客户', sales: '订单', sale: '订单', payments: '收款', payment: '收款', stock: '库存', item: '产品', owner: '负责人', channel: '渠道' },
+      labels: { customers: 'Customers', customer: 'Customer', sales: 'Orders', sale: 'Order', payments: 'Payments', payment: 'Payment', stock: 'Stock', item: 'Product', owner: 'Owner', channel: 'Channel', department: 'Department' },
+      labels_zh: { customers: '客户', customer: '客户', sales: '订单', sale: '订单', payments: '收款', payment: '收款', stock: '库存', item: '产品', owner: '负责人', channel: '渠道', department: '部门' },
       status_map: base.status_map,
       policies: { dates: base.policies.dates, tasks },
       tables,
@@ -110,7 +112,11 @@ export function workbookProfile(fileName, sheets, businessName = SITE_CONFIG.bus
 
 // Stored workbook ({ fileName, loadedAt, sheets, absent, matched }) → a scenario like
 // loadScenario() returns. matched: the sheets were rewritten from the viewer's own layout.
-export function workbookScenario({ fileName, loadedAt, sheets, missing = [], absent = [], matched = false }) {
+export function workbookScenario({ fileName, loadedAt, sheets, missing = [], absent: absentSheets = [], matched = false }) {
+  // A Stock sheet with column names but no rows (a service business): treated like no stock
+  // sheet, so the stock page and stock reminders are hidden.
+  const absent = [...absentSheets];
+  if (!absent.includes('Stock') && sheets.Stock?.length === 1) absent.push('Stock');
   const { profile, missingOptional } = workbookProfile(fileName, sheets, undefined, absent);
   const issues = [];
   for (const name of missing.length ? missing : SHEETS.filter(s => !sheets[s])) {

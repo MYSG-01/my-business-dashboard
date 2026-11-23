@@ -15,8 +15,9 @@ export function computeMetrics(records, reportingDate, options = {}) {
   const pEnd = periodEnd || reportingDate;
   const customers = records.customers || [];
   const customerById = new Map(customers.map(c => [c.id, c]));
-  const saleFilter = s => {
+  const saleFilter = (s, { department = true } = {}) => {
     if (filters.channel && (s.channel || '') !== filters.channel) return false;
+    if (department && filters.department && (s.department || '') !== filters.department) return false;
     if (filters.owner) {
       const owner = customerById.get(s.customer_id)?.owner || '';
       if (owner !== filters.owner) return false;
@@ -107,6 +108,37 @@ export function computeMetrics(records, reportingDate, options = {}) {
     trend.push({ month: m.slice(0, 7), order_value: value, partial: mEnd > reportingDate, end: mEnd > reportingDate ? reportingDate : mEnd });
   }
 
+  // Per department (the Sales sheet's optional "department" column), as of the reporting
+  // date and for the selected period. Ignores the department filter itself, so the
+  // departments can be compared; the other filters apply.
+  const byDepartment = [];
+  const deptSales = eligibleAll.filter(s => (s.department || '') && saleFilter(s, { department: false }));
+  if (deptSales.length) {
+    const paidAll = new Map();
+    const deptIds = new Set(deptSales.map(s => s.id));
+    for (const p of records.payments || []) {
+      if (!deptIds.has(p.sale_id) || !p.date || p.date > reportingDate) continue;
+      paidAll.set(p.sale_id, (paidAll.get(p.sale_id) || 0) + p.amount);
+    }
+    const rows = new Map();
+    const row = k => { if (!rows.has(k)) rows.set(k, { department: k, period_order_value: 0, period_order_count: 0, period_cash_collected: 0, pending_count: 0, outstanding_balance: 0, overdue_balance: 0 }); return rows.get(k); };
+    const deptOf = new Map(deptSales.map(s => [s.id, s.department]));
+    for (const s of deptSales) {
+      const r = row(s.department);
+      if (inRange(s.date, pStart, pEnd)) { r.period_order_value += s.amount; r.period_order_count++; }
+      if (s.status === 'pending') r.pending_count++;
+      const balance = s.amount - (paidAll.get(s.id) || 0);
+      if (balance > 0) {
+        r.outstanding_balance += balance;
+        if (s.payment_due_date && s.payment_due_date < reportingDate) r.overdue_balance += balance;
+      }
+    }
+    for (const p of records.payments || []) {
+      if (deptOf.has(p.sale_id) && inRange(p.date, pStart, pEnd) && p.date <= reportingDate) row(deptOf.get(p.sale_id)).period_cash_collected += p.amount;
+    }
+    byDepartment.push(...[...rows.values()].sort((a, b) => a.department.localeCompare(b.department, 'zh')));
+  }
+
   const byChannel = {};
   for (const s of inPeriod) { const k = s.channel || tr('(none)'); byChannel[k] = (byChannel[k] || 0) + s.amount; }
 
@@ -150,6 +182,7 @@ export function computeMetrics(records, reportingDate, options = {}) {
     comparison: { ...comparison, prior_order_value: priorOrderValue, growth },
     trend,
     by_channel: byChannel,
+    by_department: byDepartment,
   };
 }
 

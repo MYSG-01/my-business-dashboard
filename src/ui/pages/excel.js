@@ -165,7 +165,7 @@ export function renderExcelStart() {
     t('h2', tr('Start from a practice workbook')),
     t('p', tr('No file yet? Download a practice workbook (invented BetterSpace data) and open it to try the dashboard.'), 'small ink2'),
     h('div', { class: 'row' }, ...TEMPLATES.map(tpl => h('button', { class: 'btn', onclick: () => downloadTemplate(tpl) }, tr('Download {0}', tpl.file)))),
-    t('p', tr('The B2B workbook has account owners and follow-up dates; the B2C workbook does not. Either layout works.'), 'hint')));
+    t('p', tr('The B2B workbook has account owners and follow-up dates; the B2C workbook does not. The Legal workbook (a law firm) adds a department column — 转名, 继承, 离婚 — and has no stock. Each layout works.'), 'hint')));
   return root;
 }
 

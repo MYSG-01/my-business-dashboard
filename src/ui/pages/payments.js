@@ -27,6 +27,7 @@ export function renderPayments() {
     ] })));
   let rows = (records().payments || []).filter(p => p.date >= start && p.date <= end);
   if (view.filters.channel) rows = rows.filter(p => (salesById.get(p.sale_id)?.channel || '') === view.filters.channel);
+  if (view.filters.department) rows = rows.filter(p => (salesById.get(p.sale_id)?.department || '') === view.filters.department);
   add(root, h('div', { class: 'card' }, t('h2', tr('Receipts in period')), dataTable({ rows, sortKey: 'date', onRow: r => saleDrawer(salesById.get(r.sale_id)), columns: [
     { key: 'id', label: 'ID' },
     { key: 'date', label: tr('Date'), text: r => formatDate(r.date), sortValue: r => r.date },

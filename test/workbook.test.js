@@ -175,3 +175,46 @@ test('in the practice layout, dates written 30/08/2026 and amounts written RM 12
   assert.equal(s.ok, true, JSON.stringify(s.issues.filter(i => i.level === 'error').slice(0, 3)));
   assert.deepEqual(s.records.sales.map(r => [r.date, r.amount]), plain.records.sales.map(r => [r.date, r.amount]));
 });
+
+// The legal-services practice workbook has the optional "department" column (转名 / 继承 /
+// 离婚) and an empty Stock sheet. Per-department figures are checked against sums made
+// straight from the sheet rows, not through the mapping or metrics code.
+test('BetterSpace_Legal.xlsx: departments add up, the department filter matches, empty stock is hidden', async () => {
+  const { sheets, missing } = await readWorkbook(bytes('BetterSpace_Legal.xlsx'));
+  const s = workbookScenario({ fileName: 'BetterSpace_Legal.xlsx', loadedAt: '2026-11-20T06:00:00.000Z', sheets, missing });
+  assert.equal(s.ok, true, JSON.stringify(s.issues.slice(0, 3)));
+  assert.deepEqual(s.issues, [], 'no warnings');
+  assert.deepEqual(s.source.absent, ['Stock'], 'a Stock sheet with no rows counts as no stock');
+  const [head, ...rows] = sheets.Sales;
+  const col = name => head.indexOf(name);
+  const live = rows.filter(r => r[col('status')] !== 'Cancelled' && r[col('sale_date')] <= s.reportingDate);
+  const deptOf = new Map(live.map(r => [r[col('sale_id')], r[col('department')]]));
+  const [pHead, ...pRows] = sheets.Payments;
+  const paid = new Map();
+  for (const p of pRows) if (deptOf.has(p[pHead.indexOf('sale_id')])) paid.set(p[pHead.indexOf('sale_id')], (paid.get(p[pHead.indexOf('sale_id')]) || 0) + p[pHead.indexOf('amount')]);
+  const expect = {};
+  for (const r of live) {
+    const d = (expect[r[col('department')]] ||= { value: 0, count: 0, outstanding: 0 });
+    d.value += r[col('total_amount')]; d.count++;
+    d.outstanding += Math.max(0, r[col('total_amount')] - (paid.get(r[col('sale_id')]) || 0));
+  }
+  assert.deepEqual(Object.keys(expect).sort(), ['离婚', '继承', '转名'].sort());
+  const all = { periodStart: s.historyStart, periodEnd: s.reportingDate, historyStart: s.historyStart };
+  const m = computeMetrics(s.records, s.reportingDate, all);
+  for (const d of m.by_department) {
+    assert.equal(d.period_order_value, cents(expect[d.department].value), d.department);
+    assert.equal(d.period_order_count, expect[d.department].count, d.department);
+    assert.equal(d.outstanding_balance, cents(expect[d.department].outstanding), d.department);
+    const only = computeMetrics(s.records, s.reportingDate, { ...all, filters: { department: d.department } });
+    assert.equal(only.period_order_value, d.period_order_value, 'the filter shows the same figure as the department row');
+    assert.equal(only.outstanding_balance, d.outstanding_balance);
+    assert.deepEqual(only.by_department, m.by_department, 'the department table ignores the department filter');
+  }
+  assert.equal(m.by_department.reduce((a, d) => a + d.period_order_value, 0), m.period_order_value);
+  assert.equal(m.by_department.reduce((a, d) => a + d.outstanding_balance, 0), m.outstanding_balance);
+});
+
+test('workbooks without a department column have no department figures', async () => {
+  const s = await open('BetterSpace_B2B.xlsx');
+  assert.deepEqual(computeMetrics(s.records, s.reportingDate, { historyStart: s.historyStart }).by_department, []);
+});

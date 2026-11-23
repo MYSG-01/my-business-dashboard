@@ -9,10 +9,10 @@
 // reading an updated file again asks nothing, unless it has status words not seen before.
 // Only the orders sheet must exist; customers, payments and stock may be missing.
 
-import { LAYOUTS } from './layouts.generated.js';
+import { PRACTICE_LAYOUT } from './practice-layout.js';
 import { ENTITIES } from '../core/model.js';
 
-const LAYOUT = LAYOUTS['betterspace-b2b'];
+const LAYOUT = PRACTICE_LAYOUT;
 export const ROLES = ['Sales', 'Customers', 'Payments', 'Stock']; // Sales first: the one sheet that must exist
 export const OPTIONAL_ROLES = new Set(['Customers', 'Payments', 'Stock']);
 export const MATCHING_VERSION = 1;
@@ -61,6 +61,7 @@ const COLUMN_NAMES = {
   'Sales.unit_price': ['unit price', 'price', 'unit fee', '单价'],
   'Sales.amount': ['amount', 'total', 'total amount', 'invoice total', 'grand total', 'order total', '金额', '总额', '总金额', '合计', '总计'],
   'Sales.channel': ['channel', 'sales channel', 'source', 'platform', '渠道', '来源', '平台'],
+  'Sales.department': ['department', 'dept', 'division', 'practice area', 'case type', '部门', '部', '组别', '案件类型', '案件类别', '业务类别'],
   'Sales.status': ['status', 'order status', '状态', '订单状态'],
   'Sales.payment_due_date': ['due date', 'payment due', 'payment due date', '付款期限', '到期日', '截止日期'],
   'Sales.promised_completion_date': ['delivery date', 'pickup date', 'pick-up date', 'promised date', 'completion date', '取货日期', '交货日期', '送货日期'],

@@ -9,6 +9,7 @@ export function allowedFacts(input) {
     for (const k of ['period_order_value', 'average_order_value', 'period_cash_collected', 'all_time_order_value', 'all_time_cash_collected', 'outstanding_balance', 'overdue_balance', 'due_today_balance']) if (m[k] !== null) money.add(m[k]);
     money.add(m.comparison.prior_order_value);
     for (const v of Object.values(m.by_channel || {})) money.add(v);
+    for (const d of m.by_department || []) { for (const k of ['period_order_value', 'period_cash_collected', 'outstanding_balance', 'overdue_balance']) money.add(d[k]); counts.add(d.period_order_count); counts.add(d.pending_count); }
     for (const b of m.balances) { money.add(b.amount); money.add(b.paid); money.add(b.balance); }
     for (const k of ['period_order_count', 'period_receipt_count', 'overdue_payment_count', 'pending_completion_count']) counts.add(m[k]);
     for (const k of ['overdue_completion_ids', 'due_today_completion_ids', 'low_stock_ids', 'out_of_stock_ids', 'overdue_follow_up_ids', 'follow_up_today_ids', 'unassigned_prospect_ids', 'repeat_customer_ids']) counts.add(m[k].length);

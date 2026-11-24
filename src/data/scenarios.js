@@ -6,16 +6,16 @@
 // One snapshot: the workbook as last read. When an updated workbook is read again, task
 // decisions carry over by their stable keys (rule:record_id).
 
-import { MY_EXCEL, DIVORCE, emptyWorkbookProfile } from './workbook.js';
+import { MY_EXCEL, DIVORCE, INHERITANCE, emptyWorkbookProfile } from './workbook.js';
 import { setCaseWording } from '../i18n/i18n.js';
 
-export { MY_EXCEL, DIVORCE };
+export { MY_EXCEL, DIVORCE, INHERITANCE };
 export const DAYS = ['day1'];
 export const dayNumber = () => 1;
 
-// Two businesses, each with its own Excel file: the transfers (MY_EXCEL) and the divorce cases (DIVORCE).
+// Three businesses, each with its own Excel file: the transfers (MY_EXCEL), the divorce cases (DIVORCE) and the inheritance cases (INHERITANCE).
 // Their decisions, notes and AI analyses are kept apart. Only the active one is shown.
-const BUSINESS_IDS = [MY_EXCEL, DIVORCE];
+const BUSINESS_IDS = [MY_EXCEL, DIVORCE, INHERITANCE];
 export function allBusinessIds() { return [...BUSINESS_IDS]; }
 export function hasBusiness(id) { return BUSINESS_IDS.includes(id); }
 

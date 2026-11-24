@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readWorkbook, workbookScenario, workbookColumns, cellValue, SHEETS, MY_EXCEL } from '../src/data/workbook.js';
-import { loadScenario as openScenario, setWorkbookScenario, businessProfile, allBusinessIds, DIVORCE } from '../src/data/scenarios.js';
+import { loadScenario as openScenario, setWorkbookScenario, businessProfile, allBusinessIds, DIVORCE, INHERITANCE } from '../src/data/scenarios.js';
 import { loadScenario } from './support/training.js';
 import { computeMetrics } from '../src/core/metrics.js';
 import { suggestionsFor } from '../src/core/scenario-tasks.js';
@@ -58,8 +58,8 @@ for (const [file, business] of [['BetterSpace_B2C.xlsx', 'b2c'], ['BetterSpace_B
   });
 }
 
-test('the dashboard has two businesses (transfers and divorce), each with its own opened workbook, and no built-in data', async () => {
-  assert.deepEqual(allBusinessIds(), [MY_EXCEL, DIVORCE]);
+test('the dashboard has three businesses (transfers and divorce), each with its own opened workbook, and no built-in data', async () => {
+  assert.deepEqual(allBusinessIds(), [MY_EXCEL, DIVORCE, INHERITANCE]);
   setWorkbookScenario(null);
   assert.equal(openScenario(), null, 'nothing open yet: the pages show how to open a file');
   assert.equal(businessProfile().business.short_zh, '我的 Excel');

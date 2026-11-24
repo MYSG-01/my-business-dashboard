@@ -648,4 +648,5 @@ export default {
   "Total sales (RM)": "总销售额（RM）",
   "ROAS = total sales × {0} ÷ ad cost incl. tax ({1} tax).": "ROAS = 总销售额 × {0} ÷ 广告费（含{1}税）。",
   "Ad cost incl. tax {0} · CPM {1}": "广告费（含税）{0} · CPM {1}",
+  "Inheritance": "继承",
 };

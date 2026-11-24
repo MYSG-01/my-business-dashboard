@@ -35,6 +35,7 @@
   --fol-bg: #ECE6F8;  --fol-ink: #3E2F78;  --fol-dot: #7B66C9;
   --pro-bg: #E3EDD2;  --pro-ink: #2F4A17;  --pro-dot: #5E8F30;
   --task-bg: #DDEBFA; --task-ink: #1B4C80; --task-dot: #2370B5;
+  --appt-bg: #E3F1EE; --appt-ink: #1E4F48; --appt-dot: #2A7F74;
   --note-bg: #F2F0EC; --note-ink: #4A4245;
   --overdue: #C9372C;      /* outline and mark for a past deadline (≥ 4.2:1 on the tints, 5.2:1 on white; always with "!") */
   /* status: always shown with a word, never colour alone */
@@ -263,7 +264,7 @@ tr.clickable:hover { background: var(--surface-2); }
 .legend { display: flex; gap: 6px 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); margin: 0 0 12px; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .legend span::before { content: ""; display: inline-block; flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--axis); }
-.legend .t-payment::before { background: var(--pay-dot); } .legend .t-followup::before { background: var(--fol-dot); } .legend .t-completion::before { background: var(--pro-dot); } .legend .t-task::before { background: var(--task-dot); }
+.legend .t-payment::before { background: var(--pay-dot); } .legend .t-followup::before { background: var(--fol-dot); } .legend .t-completion::before { background: var(--pro-dot); } .legend .t-task::before { background: var(--task-dot); } .legend .t-appointment::before { background: var(--appt-dot); }
 .legend .t-entry::before { background: transparent; border: 1.5px dashed var(--warm-grey); width: 7px; height: 7px; }
 .legend .overdue::before { background: transparent; border: 2px solid var(--overdue); width: 7px; height: 7px; border-radius: 3px; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border: 1px solid var(--grid); border-radius: var(--radius); overflow: hidden; }
@@ -290,6 +291,7 @@ tr.clickable:hover { background: var(--surface-2); }
 .cal-item.t-followup { background: var(--fol-bg); color: var(--fol-ink); } .cal-item.t-followup .dot { background: var(--fol-dot); }
 .cal-item.t-completion { background: var(--pro-bg); color: var(--pro-ink); } .cal-item.t-completion .dot { background: var(--pro-dot); }
 .cal-item.t-task { background: var(--task-bg); color: var(--task-ink); } .cal-item.t-task .dot { background: var(--task-dot); }
+.cal-item.t-appointment { background: var(--appt-bg); color: var(--appt-ink); } .cal-item.t-appointment .dot { background: var(--appt-dot); }
 .cal-item.t-entry { box-shadow: inset 0 0 0 1px var(--warm-grey); }
 .cal-item.t-entry .dot { background: transparent; border: 1.5px dashed var(--warm-grey); }
 .cal-item.overdue { box-shadow: inset 0 0 0 1.5px var(--overdue); }

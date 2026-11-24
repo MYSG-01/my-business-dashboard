@@ -242,3 +242,29 @@ test('BetterSpace_Legal.xlsx: the case_owner column drives the owner filter; the
   assert.equal(toCaseWording('2 sale(s) past due · Sale · from the sales records'), '2 case(s) past due · Case · from the sales records');
   assert.equal(toCaseWording('Orders in period · order value · Reorder level'), 'Cases in period · case value · Reorder level');
 });
+
+// The optional Calendar sheet: rows with a date and a title become appointments on the calendar.
+// Details (phone numbers, PIC) are kept out of the calendar item, so the AI request never gets them.
+test('a Calendar sheet becomes appointments; rows without a date or title are left out', async () => {
+  const { readAppointments } = await import('../src/data/workbook.js');
+  const { buildCalendarItems } = await import('../src/core/calendar.js');
+  const { sheets, missing } = await readWorkbook(bytes('BetterSpace_B2B.xlsx'));
+  const calendar = [
+    ['date', 'title', 'detail'],
+    ['2026-11-04', '继承 · Wong · 10–11am', '电话 012-0000000 · PIC Ivan/Alyssa'],
+    ['05/11/2026', '继承 · Doris Shi · 11am', '+60 10-000 0000'],
+    ['', '没有日期', '这行要略过'],
+    ['2026-11-21', '', '没有标题，也要略过'],
+  ];
+  const r = readAppointments(calendar);
+  assert.deepEqual(r.list.map(a => [a.date, a.title]), [['2026-11-04', '继承 · Wong · 10–11am'], ['2026-11-05', '继承 · Doris Shi · 11am']]);
+  assert.equal(r.skipped, 2);
+  const s = workbookScenario({ fileName: 'x.xlsx', loadedAt: 'x', sheets: { ...sheets, Calendar: calendar }, missing });
+  assert.equal(s.appointments.length, 2);
+  assert.ok(s.issues.some(i => i.code === 'appointments_skipped'));
+  const items = buildCalendarItems({ records: s.records, metrics: computeMetrics(s.records, s.reportingDate, { historyStart: s.historyStart }), tasks: [], reportingDate: s.reportingDate, appointments: s.appointments });
+  const appt = items.filter(i => i.kind === 'appointment');
+  assert.equal(appt.length, 2);
+  assert.ok(appt.every(i => i.note === '' && !/\d{3}-\d{7}|\+60/.test(JSON.stringify(i))), 'no phone numbers in calendar items');
+  assert.equal(appt[0].type, 'appointment');
+});

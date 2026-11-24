@@ -16,7 +16,7 @@ import { LAYOUTS } from './layouts.generated.js';
 import { PRACTICE_LAYOUT } from './practice-layout.js';
 import { ENTITIES, TASK_RULES } from '../core/model.js';
 import { applyTableMapping, relationalChecks, resolveReportingDate, hasErrors, findHeaderIndex, issue } from '../core/mapping.js';
-import { monthStart } from '../core/dates.js';
+import { monthStart, isIsoDate } from '../core/dates.js';
 import { tr } from '../i18n/i18n.js';
 import { SITE_CONFIG } from '../site-config.js';
 
@@ -66,7 +66,37 @@ export async function readWorkbook(arrayBuffer) {
     if (rows) sheets[name] = rows.map(r => r.map(cellValue));
     else missing.push(name);
   }
+  // Optional: a Calendar sheet (date, title, detail) holds appointments shown on the calendar.
+  const calendar = byName.get('calendar');
+  if (calendar) sheets.Calendar = calendar.map(r => r.map(cellValue));
   return { sheets, missing, all: all.map(s => ({ name: String(s.sheet), rows: s.data.map(r => r.map(cellValue)) })) };
+}
+
+// A date cell as 'YYYY-MM-DD' (also accepts 'dd/mm/yyyy'); '' when it is not a date.
+function appointmentDate(v) {
+  const s = String(v ?? '').trim();
+  if (isIsoDate(s)) return s;
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s);
+  if (!m) return '';
+  const iso = `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+  return isIsoDate(iso) ? iso : '';
+}
+
+// The Calendar sheet's rows → appointments. Rows need a date and a title; the rest are skipped.
+export function readAppointments(rows) {
+  const list = [];
+  let skipped = 0;
+  if (!rows || rows.length < 2) return { list, skipped };
+  const header = rows[0].map(v => String(v ?? '').trim().toLowerCase());
+  const at = name => header.indexOf(name);
+  if (at('date') === -1 || at('title') === -1) return { list, skipped: rows.length - 1 };
+  rows.slice(1).forEach((r, i) => {
+    const date = appointmentDate(r[at('date')]);
+    const title = String(r[at('title')] ?? '').trim();
+    if (!date || !title) { skipped++; return; }
+    list.push({ id: `appt-${i + 1}`, date, title: title.slice(0, 200), detail: String(r[at('detail')] ?? '').trim().slice(0, 1000) });
+  });
+  return { list, skipped };
 }
 
 // The business profile for a workbook: the training layout, minus optional columns the
@@ -141,6 +171,8 @@ export function workbookScenario({ fileName, loadedAt, sheets, missing = [], abs
     try { reportingDate = resolveReportingDate({ reporting_date: { mode: 'latest_event_date' } }, records, null).date; }
     catch { issues.push(issue('error', 'no_dates', tr('No dated records were found, so there is no reporting date. Check the date columns.'))); }
   }
+  const appt = readAppointments(sheets.Calendar);
+  if (appt.skipped) issues.push(issue('warning', 'appointments_skipped', tr('{0} row(s) in the Calendar sheet were left out: each needs a date and a title.', appt.skipped)));
   const firstSale = (records.sales || []).map(s => s.date).filter(Boolean).sort()[0];
   const team = [...new Set([...(records.customers || []).map(c => c.owner), ...(records.sales || []).map(s => s.owner)].filter(Boolean))].sort();
   profile.business.team = team;
@@ -158,6 +190,7 @@ export function workbookScenario({ fileName, loadedAt, sheets, missing = [], abs
     reportingDate,
     historyStart: firstSale ? monthStart(firstSale) : undefined,
     records,
+    appointments: Object.freeze(appt.list),
     issues,
     ok: !hasErrors(issues),
     source: { fileName, loadedAt, counts: Object.fromEntries(SHEETS.map(s => [s, Math.max(0, (sheets[s] || []).length - 1)])), absent: [...absent], matched },

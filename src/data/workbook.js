@@ -24,6 +24,8 @@ import { SITE_CONFIG } from '../site-config.js';
 export const MY_EXCEL = 'my-excel';
 // The divorce workbook: a second business with its own file, decisions and notes (kept apart from MY_EXCEL).
 export const DIVORCE = 'divorce';
+// The inheritance (继承) business: its own file, kept apart from the other two.
+export const INHERITANCE = 'inheritance';
 export const WORKBOOK_VERSION = 1;
 export const WORKBOOK_LIMITS = { bytes: 10 * 1024 * 1024, rowsPerSheet: 20000 };
 export const SHEETS = ['Customers', 'Sales', 'Payments', 'Stock'];

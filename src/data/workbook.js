@@ -21,6 +21,8 @@ import { tr } from '../i18n/i18n.js';
 import { SITE_CONFIG } from '../site-config.js';
 
 export const MY_EXCEL = 'my-excel';
+// The divorce workbook: a second business with its own file, decisions and notes (kept apart from MY_EXCEL).
+export const DIVORCE = 'divorce';
 export const WORKBOOK_VERSION = 1;
 export const WORKBOOK_LIMITS = { bytes: 10 * 1024 * 1024, rowsPerSheet: 20000 };
 export const SHEETS = ['Customers', 'Sales', 'Payments', 'Stock'];

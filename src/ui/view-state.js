@@ -2,7 +2,7 @@
 // here; nothing in this file touches the DOM. Figures are always recalculated from
 // the scenario's records — no total is stored or typed in by hand.
 
-import { loadScenario, businessProfile, MY_EXCEL } from '../data/scenarios.js';
+import { loadScenario, businessProfile, setActiveBusiness, hasBusiness, MY_EXCEL } from '../data/scenarios.js';
 import { computeMetrics, formatMoney } from '../core/metrics.js';
 import { suggestionRows, scenarioTasks, baseMetrics, isOpen } from '../core/scenario-tasks.js';
 import { buildCalendarItems } from '../core/calendar.js';
@@ -28,7 +28,16 @@ export function defaultFilters() { return { preset: 'mtd', start: '', end: '', c
 
 // null while no Excel file is open (pages are guarded in main.js).
 export const scenario = () => loadScenario();
-export const isExcel = () => view.businessId === MY_EXCEL;
+export const isExcel = () => hasBusiness(view.businessId);
+// Shows another business (the transfers or the divorce file): its own workbook, decisions and filters.
+export function switchBusiness(id) {
+  if (!hasBusiness(id) || id === view.businessId) return;
+  view.businessId = id;
+  setActiveBusiness(id);
+  view.filters = defaultFilters();
+  view.calMonth = '';
+  view.calDay = '';
+}
 // Sheets a matched workbook does not have ('Customers', 'Payments', 'Stock'): pages hidden.
 export const absent = role => (loadScenario()?.source?.absent || []).includes(role);
 // One snapshot only: there is no earlier day to compare with.

@@ -135,6 +135,9 @@ function cleanAiPlan(p) {
 }
 
 export function createStateStore(storage) {
+  // The transfers file keeps the original key; other businesses have their own (see scenarios.js).
+  const DEFAULT_BUSINESS = 'my-excel';
+  const workbookKey = id => (id === DEFAULT_BUSINESS ? `${PREFIX}.workbook` : `${PREFIX}.workbook.${id}`);
   const businessKey = id => `${PREFIX}.business.${id}`;
   const aiKey = id => `${PREFIX}.ai.${id}`;
   const prefsKey = `${PREFIX}.prefs`;
@@ -164,11 +167,12 @@ export function createStateStore(storage) {
     saveNote(id, note) { const c = cleanNote(note.entry_id, note); if (!c) return false; return update(id, s => { s.notes[c.entry_id] = c; }); },
     deleteNote(id, entryId) { return update(id, s => { delete s.notes[entryId]; }); },
     // "My Excel". saveWorkbook returns 'saved', 'too_large' (kept for this visit only) or 'failed'.
-    workbook() { return cleanWorkbook(read(`${PREFIX}.workbook`)); },
-    saveWorkbook({ fileName, loadedAt, sheets, absent = [], matched = false }) {
+    workbook(id = DEFAULT_BUSINESS) { return cleanWorkbook(read(workbookKey(id))); },
+    saveWorkbook({ fileName, loadedAt, sheets, absent = [], matched = false, businessId = DEFAULT_BUSINESS }) {
       const json = JSON.stringify({ version: 1, fileName, loadedAt, sheets, absent, matched });
-      if (json.length > WORKBOOK_STORE_LIMIT) { try { storage.removeItem(`${PREFIX}.workbook`); } catch { /* ignore */ } return 'too_large'; }
-      try { storage.setItem(`${PREFIX}.workbook`, json); return 'saved'; } catch { return 'failed'; }
+      const key = workbookKey(businessId);
+      if (json.length > WORKBOOK_STORE_LIMIT) { try { storage.removeItem(key); } catch { /* ignore */ } return 'too_large'; }
+      try { storage.setItem(key, json); return 'saved'; } catch { return 'failed'; }
     },
     // How the viewer matched a workbook with this layout signature (null when none is kept).
     matching(signature) { return cleanMatchings(read(`${PREFIX}.matching`)).find(m => m.signature === signature)?.matching || null; },
@@ -179,7 +183,7 @@ export function createStateStore(storage) {
       return write(`${PREFIX}.matching`, { version: 1, list: [{ signature, matching }, ...others].slice(0, MATCHINGS_KEPT) });
     },
     // Forgetting the file also clears its task decisions, notes, AI analysis and matching.
-    forgetWorkbook(id) { try { storage.removeItem(`${PREFIX}.workbook`); storage.removeItem(businessKey(id)); storage.removeItem(aiKey(id)); storage.removeItem(`${PREFIX}.matching`); return true; } catch { return false; } },
+    forgetWorkbook(id) { try { storage.removeItem(workbookKey(id)); storage.removeItem(businessKey(id)); storage.removeItem(aiKey(id)); storage.removeItem(`${PREFIX}.matching`); return true; } catch { return false; } },
     // The latest Gemini analysis in its fixed shape (null when none is kept).
     aiPlan(id) { return cleanAiPlan(read(aiKey(id))); },
     saveAiPlan(id, plan) { const c = cleanAiPlan({ ...plan, version: 1 }); return c ? write(aiKey(id), c) : false; },

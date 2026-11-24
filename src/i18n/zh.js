@@ -630,4 +630,7 @@ export default {
   "From the Calendar sheet of your Excel. Change it there and choose Read the Excel again.": "来自你 Excel 的 Calendar 工作表。请在 Excel 里修改，然后选择「重新读取 Excel」。",
   "{0} row(s) in the Calendar sheet were left out: each needs a date and a title.": "Calendar 工作表有 {0} 行被略过：每行都需要日期和标题。",
   "No details recorded.": "没有记录详情。",
+  "HDB transfers": "HDB 转名",
+  "Divorce": "离婚",
+  "Business": "业务",
 };

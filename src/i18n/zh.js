@@ -633,4 +633,10 @@ export default {
   "HDB transfers": "HDB 转名",
   "Divorce": "离婚",
   "Business": "业务",
+  "ROAS = total sales × {0} ÷ ad cost incl. tax ({1} tax). Targets: CPM RM {2}, deposits {3}, submissions {4}. Total sales = approved + pending approval + brought forward.": "ROAS = 总销售额 × {0} ÷ 广告费（含{1}税）。目标：CPM RM {2}，定金 {3}，提交 {4}。总销售额 = 已批准 + 待批准 + 结转。",
+  "Ad cost incl. tax": "广告费（含税）",
+  "Enquiries": "咨询数",
+  "Deposits": "定金数",
+  "Submissions": "提交数",
+  "Total sales": "总销售额",
 };

@@ -17,6 +17,7 @@ import { PRACTICE_LAYOUT } from './practice-layout.js';
 import { ENTITIES, TASK_RULES } from '../core/model.js';
 import { applyTableMapping, relationalChecks, resolveReportingDate, hasErrors, findHeaderIndex, issue } from '../core/mapping.js';
 import { monthStart, isIsoDate } from '../core/dates.js';
+import { readAdsRows } from '../core/ads.js';
 import { tr } from '../i18n/i18n.js';
 import { SITE_CONFIG } from '../site-config.js';
 
@@ -71,6 +72,9 @@ export async function readWorkbook(arrayBuffer) {
   // Optional: a Calendar sheet (date, title, detail) holds appointments shown on the calendar.
   const calendar = byName.get('calendar');
   if (calendar) sheets.Calendar = calendar.map(r => r.map(cellValue));
+  // Optional: an Ads sheet (one row per advertising period) for the ROAS figures on the overview.
+  const ads = byName.get('ads');
+  if (ads) sheets.Ads = ads.map(r => r.map(cellValue));
   return { sheets, missing, all: all.map(s => ({ name: String(s.sheet), rows: s.data.map(r => r.map(cellValue)) })) };
 }
 
@@ -193,6 +197,7 @@ export function workbookScenario({ fileName, loadedAt, sheets, missing = [], abs
     historyStart: firstSale ? monthStart(firstSale) : undefined,
     records,
     appointments: Object.freeze(appt.list),
+    ads: Object.freeze(readAdsRows(sheets.Ads)),
     issues,
     ok: !hasErrors(issues),
     source: { fileName, loadedAt, counts: Object.fromEntries(SHEETS.map(s => [s, Math.max(0, (sheets[s] || []).length - 1)])), absent: [...absent], matched },

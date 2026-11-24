@@ -1,7 +1,8 @@
 import { h, t, add } from '../dom.js';
 import { pageHead, scopeBar, filterBar, tile, trendChart, hbars, statusChip } from '../components.js';
 import { rerender } from '../router.js';
-import { view, metrics, reportingDate, records, openTasks, label, money, absent } from '../view-state.js';
+import { view, metrics, reportingDate, records, openTasks, label, money, absent, adsPeriods } from '../view-state.js';
+import { ADS_TAX_RATE, ADS_ROAS_RATE, ADS_TARGETS } from '../../core/ads.js';
 import { formatDate } from '../../core/dates.js';
 import { tr, tl, getLocale } from '../../i18n/i18n.js';
 
@@ -26,6 +27,7 @@ export function renderOverview() {
   if (m.negative_balance_count) add(tiles, tile({ label: tr('Data check'), value: String(m.negative_balance_count), foot: tr('sale(s) with receipts exceeding the amount — check the source'), cls: 'alert' }));
   add(root, tiles);
   if (m.by_department.length) add(root, departmentCard(m));
+  if (adsPeriods().length) add(root, adsCard(adsPeriods()));
 
   const grid = h('div', { class: 'grid cols-2' });
   add(grid, h('div', { class: 'card' }, t('h2', tr('Monthly order value')), t('div', tr('Eligible sales by sale date; the current month is partial.'), 'scope'), trendChart(m.trend, rd)));
@@ -60,4 +62,25 @@ function departmentCard(m) {
         t('td', String(d.period_order_count), 'num'),
         ...(showPay ? [t('td', money(d.period_cash_collected), 'num'), t('td', money(d.outstanding_balance), 'num'), t('td', money(d.overdue_balance), d.overdue_balance > 0 ? 'num alert-text' : 'num')] : []),
         t('td', String(d.pending_count), 'num')))))));
+}
+
+// ROAS per advertising period (the Ads sheet). Rates and targets are fixed; the figures are the sheet's.
+function adsCard(periods) {
+  const pct = n => `${Math.round(n * 1000) / 10}%`;
+  const rm = c => money(c);
+  const head = [tr('Period'), tr('Ad cost incl. tax'), tr('Enquiries'), 'CPM', tr('Deposits'), tr('Submissions'), tr('Total sales'), 'ROAS'];
+  return h('div', { class: 'card ads-card' },
+    t('h2', 'ROAS'),
+    t('div', tr('ROAS = total sales × {0} ÷ ad cost incl. tax ({1} tax). Targets: CPM RM {2}, deposits {3}, submissions {4}. Total sales = approved + pending approval + brought forward.', pct(ADS_ROAS_RATE), pct(ADS_TAX_RATE), (ADS_TARGETS.cpm / 100).toFixed(0), ADS_TARGETS.deposits, ADS_TARGETS.submissions), 'scope'),
+    h('div', { class: 'table-wrap' }, h('table', {},
+      h('thead', {}, h('tr', {}, ...head.map((x, i) => h('th', { scope: 'col', class: i ? 'num' : '' }, x)))),
+      h('tbody', {}, ...periods.map(p => h('tr', {},
+        h('td', {}, p.period),
+        h('td', { class: 'num' }, rm(p.adCost)),
+        h('td', { class: 'num' }, String(p.enquiries)),
+        h('td', { class: 'num' }, p.cpm === null ? '—' : rm(p.cpm)),
+        h('td', { class: 'num' }, `${p.deposits}/${ADS_TARGETS.deposits}`),
+        h('td', { class: 'num' }, `${p.submissions}/${ADS_TARGETS.submissions}`),
+        h('td', { class: 'num' }, rm(p.totalSales)),
+        h('td', { class: 'num roas' }, p.roas === null ? '—' : p.roas.toFixed(2))))))));
 }

@@ -29,6 +29,7 @@ export function defaultFilters() { return { preset: 'mtd', start: '', end: '', c
 // null while no Excel file is open (pages are guarded in main.js).
 export const scenario = () => loadScenario();
 export const isExcel = () => hasBusiness(view.businessId);
+export const adsPeriods = () => scenario()?.ads || [];
 // Shows another business (the transfers or the divorce file): its own workbook, decisions and filters.
 export function switchBusiness(id) {
   if (!hasBusiness(id) || id === view.businessId) return;

@@ -59,7 +59,7 @@ export function generateSuggestions(records, metrics, reportingDate, policies, s
             evidence: { balance: b.balance, amount: b.amount, paid: b.paid, state: b.state, customer_id: b.customer_id, description: sale?.description || '' },
             recorded_deadline: due || '',
             suggested_date: suggested,
-            suggested_owner: customer?.owner || '',
+            suggested_owner: sale?.owner || customer?.owner || '',
           });
         }
         break;
@@ -120,7 +120,7 @@ export function generateSuggestions(records, metrics, reportingDate, policies, s
             evidence: { promised_completion_date: s.promised_completion_date, status: s.status_text || s.status, description: s.description || '' },
             recorded_deadline: s.promised_completion_date,
             suggested_date: reportingDate,
-            suggested_owner: customer?.owner || '',
+            suggested_owner: s?.owner || customer?.owner || '',
           });
         }
         break;
@@ -137,7 +137,7 @@ export function generateSuggestions(records, metrics, reportingDate, policies, s
             evidence: { promised_completion_date: s.promised_completion_date, status: s.status_text || s.status },
             recorded_deadline: s.promised_completion_date,
             suggested_date: addDays(s.promised_completion_date, -1) >= reportingDate ? addDays(s.promised_completion_date, -1) : reportingDate,
-            suggested_owner: customer?.owner || '',
+            suggested_owner: s?.owner || customer?.owner || '',
           });
         }
         break;

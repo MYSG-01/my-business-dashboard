@@ -19,7 +19,7 @@ export function computeMetrics(records, reportingDate, options = {}) {
     if (filters.channel && (s.channel || '') !== filters.channel) return false;
     if (department && filters.department && (s.department || '') !== filters.department) return false;
     if (filters.owner) {
-      const owner = customerById.get(s.customer_id)?.owner || '';
+      const owner = s.owner || customerById.get(s.customer_id)?.owner || '';
       if (owner !== filters.owner) return false;
     }
     return true;

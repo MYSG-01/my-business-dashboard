@@ -1,7 +1,7 @@
 import { h, t, add, modal, toast } from '../dom.js';
-import { pageHead, scopeBar, tile } from '../components.js';
+import { pageHead, scopeBar, tile, departmentBar } from '../components.js';
 import { icon } from '../icons.js';
-import { view, reportingDate, calendarItems, notes, records, money } from '../view-state.js';
+import { view, reportingDate, calendarItems, inDepartment, notes, records, money } from '../view-state.js';
 import { saleDrawer, customerDrawer } from '../drawers.js';
 import { navigate, rerender } from '../router.js';
 import { savedMessage } from './tasks.js';
@@ -24,14 +24,14 @@ export function renderCalendar() {
   view.calView ||= 'month';
   const month = view.calMonth;
   if (!view.calDay || view.calDay.slice(0, 7) !== month.slice(0, 7)) view.calDay = rd.slice(0, 7) === month.slice(0, 7) ? rd : month;
-  const items = calendarItems({ withAi: true }).map(item => ({ ...item, onclick: () => openItem(item) }));
+  const items = calendarItems({ withAi: true }).filter(it => inDepartment(it.record_type, it.record_id)).map(item => ({ ...item, onclick: () => openItem(item) }));
   const byDate = new Map();
   for (const it of items) { if (!byDate.has(it.date)) byDate.set(it.date, []); byDate.get(it.date).push(it); }
   const go = m => { view.calMonth = m; view.calDay = ''; rerender(); };
   const pick = d => { view.calDay = d; rerender(); };
   const setView = v => { view.calView = v; rerender(); };
 
-  const root = h('div', { class: 'cal-page' }, pageHead(tl('Calendar'), h('button', { class: 'btn primary small', onclick: () => editNote(null) }, tl('+ Add note'))), scopeBar({ period: false }));
+  const root = h('div', { class: 'cal-page' }, pageHead(tl('Calendar'), h('button', { class: 'btn primary small', onclick: () => editNote(null) }, tl('+ Add note'))), scopeBar({ period: false }), departmentBar());
 
   // Summary cards: counts and sums of the items in the month shown.
   const sum = calendarMonthSummary(items, month.slice(0, 7), rd);

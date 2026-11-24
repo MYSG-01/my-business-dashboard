@@ -7,6 +7,7 @@
 // decisions carry over by their stable keys (rule:record_id).
 
 import { MY_EXCEL, emptyWorkbookProfile } from './workbook.js';
+import { setCaseWording } from '../i18n/i18n.js';
 
 export { MY_EXCEL };
 export const DAYS = ['day1'];
@@ -16,7 +17,10 @@ export function allBusinessIds() { return [MY_EXCEL]; }
 export function hasBusiness(id) { return id === MY_EXCEL; }
 
 let workbook = null;
-export function setWorkbookScenario(scenario) { workbook = scenario; }
+export function setWorkbookScenario(scenario) {
+  workbook = scenario;
+  setCaseWording((scenario?.records?.sales || []).some(x => x.department));
+}
 export function workbookLoaded() { return !!workbook; }
 
 export function businessProfile() { return workbook?.profile || emptyWorkbookProfile(); }

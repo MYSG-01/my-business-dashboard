@@ -20,8 +20,8 @@ export function buildCalendarItems({ records, metrics, tasks, entries = [], repo
   for (const c of records.customers || []) push({ id: `followup:${c.id}`, date: c.next_follow_up_date, kind: 'deadline', type: 'followup', record_type: 'customers', record_id: c.id, title: tr('Follow-up: {0}', c.name), short: c.name || c.id });
   for (const task of tasks) {
     if (task.resolved) continue;
-    if (task.status === 'accepted') push({ id: task.task_key, date: task.action_date, kind: 'task', type: 'task', title: tr('Task: {0}', task.title), short: task.title, owner: task.owner || '', note: task.note || '' });
-    else if (task.status === 'suggested' && ai?.top.has(task.task_key)) push({ id: task.task_key, date: task.action_date || task.suggested_date, kind: 'task', type: 'task', suggested: true, title: tr('Task (not accepted yet): {0}', task.title), short: task.title, owner: task.owner || '', note: '' });
+    if (task.status === 'accepted') push({ id: task.task_key, date: task.action_date, kind: 'task', type: 'task', record_type: task.record_type || '', record_id: task.record_id || '', title: tr('Task: {0}', task.title), short: task.title, owner: task.owner || '', note: task.note || '' });
+    else if (task.status === 'suggested' && ai?.top.has(task.task_key)) push({ id: task.task_key, date: task.action_date || task.suggested_date, kind: 'task', type: 'task', suggested: true, record_type: task.record_type || '', record_id: task.record_id || '', title: tr('Task (not accepted yet): {0}', task.title), short: task.title, owner: task.owner || '', note: '' });
   }
   for (const entry of entries) if (String(entry.deleted) !== 'TRUE' && entry.deleted !== true) push({ id: entry.entry_id, date: entry.date, kind: 'entry', type: 'entry', title: entry.title, short: entry.title, note: entry.detail || '' });
   if (ai) for (const it of items) {

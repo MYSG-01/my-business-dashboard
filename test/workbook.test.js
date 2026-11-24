@@ -218,3 +218,27 @@ test('workbooks without a department column have no department figures', async (
   const s = await open('BetterSpace_B2B.xlsx');
   assert.deepEqual(computeMetrics(s.records, s.reportingDate, { historyStart: s.historyStart }).by_department, []);
 });
+
+test('BetterSpace_Legal.xlsx: the case_owner column drives the owner filter; the wording becomes 案件 / case', async () => {
+  const { toCaseWording, usesCaseWording } = await import('../src/i18n/i18n.js');
+  const { sheets, missing } = await readWorkbook(bytes('BetterSpace_Legal.xlsx'));
+  const s = workbookScenario({ fileName: 'BetterSpace_Legal.xlsx', loadedAt: '2026-11-20T06:00:00.000Z', sheets, missing });
+  const [head, ...rows] = sheets.Sales;
+  const col = name => head.indexOf(name);
+  const lawyers = [...new Set(rows.map(r => r[col('case_owner')]))];
+  assert.ok(lawyers.length >= 3);
+  const all = { periodStart: s.historyStart, periodEnd: s.reportingDate, historyStart: s.historyStart };
+  for (const lawyer of lawyers) {
+    const expect = rows.filter(r => r[col('case_owner')] === lawyer && r[col('status')] !== 'Cancelled').reduce((a, r) => a + r[col('total_amount')], 0);
+    assert.equal(computeMetrics(s.records, s.reportingDate, { ...all, filters: { owner: lawyer } }).period_order_value, cents(expect), lawyer);
+  }
+  assert.equal(s.profile.labels_zh.sales, '案件');
+  setWorkbookScenario(s);
+  assert.equal(usesCaseWording(), true);
+  setWorkbookScenario(await open('BetterSpace_B2B.xlsx'));
+  assert.equal(usesCaseWording(), false, 'no department column: orders stay orders');
+  setWorkbookScenario(null);
+  assert.equal(toCaseWording('期间订单额 · 6 张订单 · 1 张销售单'), '期间案件金额 · 6 宗案件 · 1 宗案件');
+  assert.equal(toCaseWording('2 sale(s) past due · Sale · from the sales records'), '2 case(s) past due · Case · from the sales records');
+  assert.equal(toCaseWording('Orders in period · order value · Reorder level'), 'Cases in period · case value · Reorder level');
+});

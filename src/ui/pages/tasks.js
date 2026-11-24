@@ -1,6 +1,6 @@
 import { h, t, add, modal, toast } from '../dom.js';
-import { pageHead, scopeBar, statusChip } from '../components.js';
-import { view, allTasks, isOpen, reportingDate, profile, label, saveDecision, aiMarks, savedAiPlan } from '../view-state.js';
+import { pageHead, scopeBar, statusChip, departmentBar } from '../components.js';
+import { view, allTasks, inDepartment, isOpen, reportingDate, profile, label, saveDecision, aiMarks, savedAiPlan } from '../view-state.js';
 import { openRecord } from '../drawers.js';
 import { rerender } from '../router.js';
 import { TASK_RULES } from '../../core/model.js';
@@ -16,8 +16,8 @@ function persist(task, patch) {
 }
 
 export function renderTasks() {
-  const root = h('div', {}, pageHead(tl('Tasks'), h('button', { class: 'btn primary small', onclick: () => editTask(null) }, tl('+ Add task'))), scopeBar({ period: false }));
-  const tasks = allTasks();
+  const root = h('div', {}, pageHead(tl('Tasks'), h('button', { class: 'btn primary small', onclick: () => editTask(null) }, tl('+ Add task'))), scopeBar({ period: false }), departmentBar());
+  const tasks = allTasks().filter(x => inDepartment(x.record_type, x.record_id));
   const marks = aiMarks();
   const rank = x => (isOpen(x) && marks?.top.get(x.task_key)?.rank) || 99;
   add(root, aiNotice(tasks, marks));

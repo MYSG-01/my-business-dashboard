@@ -46,10 +46,19 @@ export function filterBar({ channel = true, owner = true, department = true } = 
   if (department && depts.length) add(bar, h('label', {}, `${label('department', tr('Department'))} `, h('select', { onchange: e => { f.department = e.target.value; rerender(); } }, h('option', { value: '' }, tr('All')), ...depts.map(c => h('option', { value: c, selected: f.department === c }, c)))));
   const channels = [...new Set((records().sales || []).map(s => s.channel).filter(Boolean))].sort();
   if (channel && channels.length > 1) add(bar, h('label', {}, `${label('channel', tr('Channel'))} `, h('select', { onchange: e => { f.channel = e.target.value; rerender(); } }, h('option', { value: '' }, tr('All')), ...channels.map(c => h('option', { value: c, selected: f.channel === c }, c)))));
-  const owners = [...new Set((records().customers || []).map(c => c.owner).filter(Boolean))].sort();
+  const owners = [...new Set([...(records().customers || []).map(c => c.owner), ...(records().sales || []).map(s => s.owner)].filter(Boolean))].sort();
   if (owner && owners.length) add(bar, h('label', {}, `${label('owner', tr('Owner'))} `, h('select', { onchange: e => { f.owner = e.target.value; rerender(); } }, h('option', { value: '' }, tr('All')), ...owners.map(c => h('option', { value: c, selected: f.owner === c }, c)))));
   if (f.preset !== 'mtd' || f.channel || f.owner || f.department) add(bar, h('button', { class: 'btn ghost small', onclick: () => { view.filters = defaultFilters(); rerender(); } }, tl('Reset filters')));
   return bar;
+}
+
+// Only the department choice (Tasks and the Calendar have no period, channel or owner filter).
+export function departmentBar() {
+  const depts = departments();
+  if (!depts.length) return null;
+  const f = view.filters;
+  return h('div', { class: 'filters' }, h('label', {}, `${label('department', tr('Department'))} `, h('select', { onchange: e => { f.department = e.target.value; rerender(); } }, h('option', { value: '' }, tr('All')), ...depts.map(c => h('option', { value: c, selected: f.department === c }, c)))),
+    f.department ? t('span', tr('Items with no department (your own notes and tasks, prospects) are always shown.'), 'small muted') : null);
 }
 
 export function tile({ label: lbl, value, delta, foot, hero = false, cls = '' }) {

@@ -623,4 +623,6 @@ export default {
   "Orders in period": "本期订单数",
   "Order value, orders and cash: selected period. Balances and pending work: as of the reporting date. Press a department to show only its records.": "金额、订单数和收款按所选期间；未收款和进行中按报告日期。按部门名称就只看那个部门。",
   "The B2B workbook has account owners and follow-up dates; the B2C workbook does not. The Legal workbook (a law firm) adds a department column — 转名, 继承, 离婚 — and has no stock. Each layout works.": "B2B 工作簿有客户负责人和跟进日期，B2C 工作簿没有。Legal 工作簿（律师事务所）多了「部门」一列——转名、继承、离婚——没有库存。每种格式都可以用。",
+  "Items with no department (your own notes and tasks, prospects) are always shown.": "不属于任何部门的项目（你自己的备注和待办、潜在客户）会一直显示。",
+  "Person handling it": "负责的人（例如负责律师）",
 };

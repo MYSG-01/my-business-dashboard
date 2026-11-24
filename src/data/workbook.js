@@ -30,7 +30,7 @@ export const SHEETS = ['Customers', 'Sales', 'Payments', 'Stock'];
 const layout = () => PRACTICE_LAYOUT;
 // Columns the B2C layout simply does not have (no account owners, no follow-ups):
 // leaving them out is normal, so it is not reported.
-const LAYOUT_OPTIONAL = new Set(['account_owner', 'next_follow_up_date', 'department']);
+const LAYOUT_OPTIONAL = new Set(['account_owner', 'next_follow_up_date', 'department', 'case_owner']);
 
 // Which columns each sheet needs (for the format table on the page and for checks).
 export function workbookColumns() {
@@ -142,8 +142,13 @@ export function workbookScenario({ fileName, loadedAt, sheets, missing = [], abs
     catch { issues.push(issue('error', 'no_dates', tr('No dated records were found, so there is no reporting date. Check the date columns.'))); }
   }
   const firstSale = (records.sales || []).map(s => s.date).filter(Boolean).sort()[0];
-  const team = [...new Set((records.customers || []).map(c => c.owner).filter(Boolean))].sort();
+  const team = [...new Set([...(records.customers || []).map(c => c.owner), ...(records.sales || []).map(s => s.owner)].filter(Boolean))].sort();
   profile.business.team = team;
+  // Departments recorded: the records are cases (案件), not orders.
+  if ((records.sales || []).some(x => x.department)) {
+    Object.assign(profile.labels, { sales: 'Cases', sale: 'Case' });
+    Object.assign(profile.labels_zh, { sales: '案件', sale: '案件' });
+  }
   return Object.freeze({
     key: `${MY_EXCEL}/day1`,
     businessId: MY_EXCEL,

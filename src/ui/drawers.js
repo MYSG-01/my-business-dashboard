@@ -1,7 +1,7 @@
 // Detail panels for one sale or one customer, opened from tables, tasks and the calendar.
 
 import { h, t, drawer, toast } from './dom.js';
-import { records, reportingDate, allTasks, label, money, customerName } from './view-state.js';
+import { records, reportingDate, allTasks, label, money, customerName, saleOwner } from './view-state.js';
 import { statusChip } from './components.js';
 import { navigate } from './router.js';
 import { formatDate } from '../core/dates.js';
@@ -25,6 +25,7 @@ export function saleDrawer(sale) {
       t('dt', tr('Amount')), t('dd', money(sale.amount)),
       t('dt', tr('Status')), t('dd', `${sale.status_text || sale.status} (${tr(sale.status)})`),
       ...(sale.department ? [t('dt', label('department', tr('Department'))), t('dd', sale.department)] : []),
+      ...(saleOwner(sale) ? [t('dt', label('owner', tr('Owner'))), t('dd', saleOwner(sale))] : []),
       t('dt', tr('Channel')), t('dd', sale.channel || '—'),
       t('dt', tr('Payment due')), t('dd', sale.payment_due_date ? formatDate(sale.payment_due_date) : '—'),
       t('dt', tr('Promised completion')), t('dd', sale.promised_completion_date ? formatDate(sale.promised_completion_date) : '—'),

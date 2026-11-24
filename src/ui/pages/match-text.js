@@ -16,7 +16,7 @@ export const ABSENT_TEXT = {
 export const FIELD_TEXT = {
   'Sales.id': 'Order or invoice number', 'Sales.customer_id': 'Customer number', 'Sales.date': 'Order date', 'Sales.item_id': 'Product code',
   'Sales.description': 'What was sold', 'Sales.offering_type': 'Product or service', 'Sales.quantity': 'Quantity', 'Sales.unit_price': 'Unit price',
-  'Sales.amount': 'Order amount (the total of the order)', 'Sales.channel': 'Sales channel', 'Sales.department': 'Department', 'Sales.status': 'Status',
+  'Sales.amount': 'Order amount (the total of the order)', 'Sales.channel': 'Sales channel', 'Sales.department': 'Department', 'Sales.owner': 'Person handling it', 'Sales.status': 'Status',
   'Sales.payment_due_date': 'Payment due date', 'Sales.promised_completion_date': 'Promised delivery or completion date', 'Sales.actual_completion_date': 'Actual completion date',
   'Customers.id': 'Customer number', 'Customers.name': 'Customer name', 'Customers.type': 'Customer or prospect', 'Customers.contact': 'Contact',
   'Customers.created_date': 'Date joined', 'Customers.owner': 'Person responsible', 'Customers.next_follow_up_date': 'Next follow-up date', 'Customers.notes': 'Notes',

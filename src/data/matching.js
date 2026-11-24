@@ -62,6 +62,7 @@ const COLUMN_NAMES = {
   'Sales.amount': ['amount', 'total', 'total amount', 'invoice total', 'grand total', 'order total', '金额', '总额', '总金额', '合计', '总计'],
   'Sales.channel': ['channel', 'sales channel', 'source', 'platform', '渠道', '来源', '平台'],
   'Sales.department': ['department', 'dept', 'division', 'practice area', 'case type', '部门', '部', '组别', '案件类型', '案件类别', '业务类别'],
+  'Sales.owner': ['case owner', 'handled by', 'lawyer', 'person in charge', 'pic', '负责律师', '承办律师', '经办人', '承办人', '负责人'],
   'Sales.status': ['status', 'order status', '状态', '订单状态'],
   'Sales.payment_due_date': ['due date', 'payment due', 'payment due date', '付款期限', '到期日', '截止日期'],
   'Sales.promised_completion_date': ['delivery date', 'pickup date', 'pick-up date', 'promised date', 'completion date', '取货日期', '交货日期', '送货日期'],

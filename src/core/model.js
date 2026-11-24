@@ -34,6 +34,7 @@ export const ENTITIES = {
       unit_price: { type: 'money' },
       amount: { type: 'money', required: true, doc: 'Booked order value, not profit or cash' },
       channel: { type: 'text' },
+      owner: { type: 'text', doc: 'Person handling this order or case; blank = the customer\'s owner' },
       department: { type: 'text', doc: 'Department handling the job (e.g. 转名, 继承, 离婚); blank = none' },
       status: { type: 'status', doc: 'Mapped through status_map to pending/done/excluded' },
       payment_due_date: { type: 'date', doc: 'Recorded deadline for the balance' },

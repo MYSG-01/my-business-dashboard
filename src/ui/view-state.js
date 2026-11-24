@@ -113,8 +113,24 @@ export function businessName(id = view.businessId) { const b = businessProfile(i
 // Departments named in the Sales sheet's optional "department" column (none: no department filter).
 export function departments() { return [...new Set((records().sales || []).map(s => s.department).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh')); }
 
+// Does a task or calendar item belong to the selected department? Items for a case use the
+// case's department; items for a customer, any of the customer's cases. Items with no
+// department (your own notes and tasks, prospects with no case yet, stock) always show.
+export function inDepartment(recordType, recordId) {
+  const dept = view.filters.department;
+  if (!dept) return true;
+  const sales = records().sales || [];
+  let own = [];
+  if (recordType === 'sales') own = sales.filter(s => s.id === recordId).map(s => s.department);
+  else if (recordType === 'customers') own = sales.filter(s => s.customer_id === recordId).map(s => s.department);
+  own = own.filter(Boolean);
+  return !own.length || own.includes(dept);
+}
+
 export function customerName(id) { return (records().customers || []).find(c => c.id === id)?.name || id || ''; }
 export function customerOwner(id) { return (records().customers || []).find(c => c.id === id)?.owner || ''; }
+// Who handles a sale: its own case_owner, else the customer's owner.
+export function saleOwner(s) { return s?.owner || customerOwner(s?.customer_id); }
 
 // Record a task decision (accept, complete, dismiss, reopen, edit). Adapted from the
 // original saveDecision(): the same row shape, stored in this browser instead of Sheets.

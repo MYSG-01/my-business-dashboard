@@ -24,6 +24,21 @@ export function setLocale(value) {
 
 export function getLocale() { return locale; }
 
+// Case wording: a business that records departments (转名 / 继承 / 离婚…) calls its records
+// cases, not orders. When on, interface text says 案件 / case instead of 订单 / order.
+// Only the fixed text is changed, never the values filled into {0}, {1}…
+let caseWording = false;
+export function setCaseWording(on) { caseWording = !!on; }
+export function usesCaseWording() { return caseWording; }
+const MATCH_CASE = (word, like) => (like[0] === like[0].toUpperCase() ? word[0].toUpperCase() + word.slice(1) : word);
+export function toCaseWording(text) {
+  return String(text)
+    .replace(/[张笔]订单/g, '宗案件').replace(/订单额/g, '案件金额').replace(/订单/g, '案件').replace(/[张笔]销售单/g, '宗案件').replace(/销售单/g, '案件').replace(/ 张已过/g, ' 宗已过')
+    .replace(/\b([Oo])rders\b/g, (m, o) => MATCH_CASE('cases', o)).replace(/\b([Oo])rder\b/g, (m, o) => MATCH_CASE('case', o))
+    .replace(/\b([Ss])ale(\(s\))?(?![\w(])/g, (m, o, pl) => MATCH_CASE('case', o) + (pl || ''));
+}
+const words = text => (caseWording ? toCaseWording(text) : text);
+
 // Intl locale for dates and numbers shown to the owner.
 export function intlLocale() { return locale === 'zh-CN' ? 'zh-CN' : 'en-MY'; }
 
@@ -40,16 +55,17 @@ function lookup(en) {
 
 // Plain text: Chinese only.
 export function tr(en, ...args) {
-  if (locale !== 'zh-CN') return fill(en, args);
-  return fill(lookup(en) ?? en, args);
+  if (locale !== 'zh-CN') return fill(words(en), args);
+  return fill(words(lookup(en) ?? en), args);
 }
 
 // Menu items, buttons and named controls: 中文（English）, so the English name in the
 // guide and in search results still matches.
 export function tl(en, ...args) {
-  const english = fill(en, args).trim();
+  const english = fill(words(en), args).trim();
   if (locale !== 'zh-CN') return english;
-  const zh = lookup(en);
+  const zhRaw = lookup(en);
+  const zh = zhRaw === null ? null : words(zhRaw);
   if (zh === null) return english;
   // Keep decorations (“+ ”, “ ↗”, “…”, “ ×”) outside the brackets: + 新增待办（Add task）
   const pre = /^(\+\s)/.exec(english)?.[1] || '';

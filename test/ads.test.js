@@ -52,3 +52,18 @@ test('the Ads sheet is read: money with RM and commas, blank brought forward cou
   assert.equal(p.roas, 10.59);
   assert.deepEqual(readAdsRows([['period', 'other']]), [], 'no Ads columns → no ROAS card');
 });
+
+// The simple form: fill in ad cost, customers and total sales; the rest is worked out.
+test('the simple Ads form: adv_fee_before_tax, customers, total_sales — ROAS and ad cost are worked out', () => {
+  const rows = [
+    ['period', 'adv_fee_before_tax', 'customers', 'total_sales'],
+    ['Oct 2026 (20/10-31/10)', '7444.54', '95', '17454428'],
+    ['Nov 2026 (14/11-20/11)', '4704.74', '57', 'RM 7,452,419'],
+  ];
+  const [a, b] = readAdsRows(rows);
+  assert.equal(a.adCost, c(8635.67));
+  assert.equal(a.enquiries, 95);
+  assert.equal(a.roas, 10.11);
+  assert.equal(b.totalSales, c(7452419));
+  assert.equal(b.roas, 6.83);
+});

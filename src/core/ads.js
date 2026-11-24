@@ -17,19 +17,24 @@ const cents = v => {
 };
 const count = v => { const n = parseInt(String(v ?? '').replace(/[,\s]/g, ''), 10); return Number.isFinite(n) ? n : 0; };
 
-// The Ads sheet's rows → figures. Columns (names as in the template): period, adv_fee_before_tax, enquiries,
-// deposits, submissions, pending_approval, approved, brought_forward, cpm_stated (optional).
+// The Ads sheet's rows → figures. Columns: period, adv_fee_before_tax, customers (or enquiries), total_sales
+// (or approved + pending_approval + brought_forward), and optionally deposits, submissions, cpm_stated.
 export function readAdsRows(rows) {
   if (!rows || rows.length < 2) return [];
   const header = rows[0].map(v => String(v ?? '').trim().toLowerCase());
   const at = name => header.indexOf(name);
   if (at('period') === -1 || at('adv_fee_before_tax') === -1) return [];
+  const enq = at('enquiries') !== -1 ? at('enquiries') : at('customers');
+  const total = at('total_sales');
+  const hasFunnel = at('deposits') !== -1 || at('submissions') !== -1;
   return rows.slice(1).filter(r => String(r[at('period')] ?? '').trim()).map(r => adsFigures({
+    hasFunnel,
     period: String(r[at('period')]).trim(),
     adFeeBeforeTax: cents(r[at('adv_fee_before_tax')]),
-    enquiries: count(r[at('enquiries')]),
-    deposits: count(r[at('deposits')]),
-    submissions: count(r[at('submissions')]),
+    enquiries: enq === -1 ? 0 : count(r[enq]),
+    totalSales: total === -1 ? undefined : cents(r[total]),
+    deposits: at('deposits') === -1 ? 0 : count(r[at('deposits')]),
+    submissions: at('submissions') === -1 ? 0 : count(r[at('submissions')]),
     pending: cents(r[at('pending_approval')]),
     approved: cents(r[at('approved')]),
     broughtForward: cents(r[at('brought_forward')]),
@@ -41,9 +46,10 @@ export function readAdsRows(rows) {
 export function adsFigures(i) {
   const tax = Math.round(i.adFeeBeforeTax * ADS_TAX_RATE);
   const adCost = i.adFeeBeforeTax + tax;
-  const totalSales = i.approved + i.pending + i.broughtForward;
+  const totalSales = i.totalSales ?? (i.approved + i.pending + i.broughtForward);
   const cpmCalc = i.enquiries ? Math.round(adCost / i.enquiries) : null;
   return {
+    hasFunnel: !!i.hasFunnel,
     period: i.period,
     adCost,
     tax,

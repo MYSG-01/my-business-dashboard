@@ -68,10 +68,11 @@ function departmentCard(m) {
 function adsCard(periods) {
   const pct = n => `${Math.round(n * 1000) / 10}%`;
   const rm = c => money(c);
-  const head = [tr('Period'), tr('Ad cost incl. tax'), tr('Enquiries'), 'CPM', tr('Deposits'), tr('Submissions'), tr('Total sales'), 'ROAS'];
+  const funnel = periods.some(p => p.hasFunnel);
+  const head = [tr('Period'), tr('Ad cost incl. tax'), tr('Enquiries'), 'CPM', ...(funnel ? [tr('Deposits'), tr('Submissions')] : []), tr('Total sales'), 'ROAS'];
   return h('div', { class: 'card ads-card' },
     t('h2', 'ROAS'),
-    t('div', tr('ROAS = total sales × {0} ÷ ad cost incl. tax ({1} tax). Targets: CPM RM {2}, deposits {3}, submissions {4}. Total sales = approved + pending approval + brought forward.', pct(ADS_ROAS_RATE), pct(ADS_TAX_RATE), (ADS_TARGETS.cpm / 100).toFixed(0), ADS_TARGETS.deposits, ADS_TARGETS.submissions), 'scope'),
+    t('div', funnel ? tr('ROAS = total sales × {0} ÷ ad cost incl. tax ({1} tax). Targets: CPM RM {2}, deposits {3}, submissions {4}.', pct(ADS_ROAS_RATE), pct(ADS_TAX_RATE), (ADS_TARGETS.cpm / 100).toFixed(0), ADS_TARGETS.deposits, ADS_TARGETS.submissions) : tr('ROAS = total sales × {0} ÷ ad cost incl. tax ({1} tax). CPM target RM {2}.', pct(ADS_ROAS_RATE), pct(ADS_TAX_RATE), (ADS_TARGETS.cpm / 100).toFixed(0)), 'scope'),
     h('div', { class: 'table-wrap' }, h('table', {},
       h('thead', {}, h('tr', {}, ...head.map((x, i) => h('th', { scope: 'col', class: i ? 'num' : '' }, x)))),
       h('tbody', {}, ...periods.map(p => h('tr', {},
@@ -79,8 +80,7 @@ function adsCard(periods) {
         h('td', { class: 'num' }, rm(p.adCost)),
         h('td', { class: 'num' }, String(p.enquiries)),
         h('td', { class: 'num' }, p.cpm === null ? '—' : rm(p.cpm)),
-        h('td', { class: 'num' }, `${p.deposits}/${ADS_TARGETS.deposits}`),
-        h('td', { class: 'num' }, `${p.submissions}/${ADS_TARGETS.submissions}`),
+        ...(funnel ? [h('td', { class: 'num' }, `${p.deposits}/${ADS_TARGETS.deposits}`), h('td', { class: 'num' }, `${p.submissions}/${ADS_TARGETS.submissions}`)] : []),
         h('td', { class: 'num' }, rm(p.totalSales)),
         h('td', { class: 'num roas' }, p.roas === null ? '—' : p.roas.toFixed(2))))))));
 }

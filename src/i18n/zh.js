@@ -640,4 +640,12 @@ export default {
   "Deposits": "定金数",
   "Submissions": "提交数",
   "Total sales": "总销售额",
+  "ROAS calculator": "ROAS 计算器",
+  "Type the ad cost and the total sales to see the ROAS.": "输入广告费和总销售额，就会显示 ROAS。",
+  "Type the ad cost before tax, the number of customers and the total sales. The 16% tax and the 0.5% are fixed. Nothing is saved to your Excel.": "输入税前广告费、客户数目和总销售额。16% 税和 0.5% 是固定的。这里输入的数字不会保存到你的 Excel。",
+  "Ad cost before tax (RM)": "税前广告费（RM）",
+  "Number of customers": "客户数目",
+  "Total sales (RM)": "总销售额（RM）",
+  "ROAS = total sales × {0} ÷ ad cost incl. tax ({1} tax).": "ROAS = 总销售额 × {0} ÷ 广告费（含{1}税）。",
+  "Ad cost incl. tax {0} · CPM {1}": "广告费（含税）{0} · CPM {1}",
 };

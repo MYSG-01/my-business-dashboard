@@ -391,3 +391,6 @@ details summary { cursor: pointer; color: var(--brand); font-size: 14px; margin:
 :focus-visible { outline: 2px solid var(--series-3); outline-offset: 2px; }
 .ok { color: var(--good-text); } .bad { color: var(--critical); } .warn { color: var(--warning-text); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.roas-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 8px 0 10px; }
+.roas-inputs input { width: 100%; }
+.roas-value { font-size: 28px; font-weight: 700; color: var(--brand); }

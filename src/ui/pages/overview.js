@@ -1,7 +1,8 @@
 import { h, t, add } from '../dom.js';
 import { pageHead, scopeBar, filterBar, tile, trendChart, hbars, statusChip } from '../components.js';
 import { rerender } from '../router.js';
-import { view, metrics, reportingDate, records, openTasks, label, money, absent } from '../view-state.js';
+import { view, metrics, reportingDate, records, openTasks, label, money, absent, adsPeriods } from '../view-state.js';
+import { ADS_TAX_RATE, ADS_ROAS_RATE, ADS_TARGETS, adsFigures } from '../../core/ads.js';
 import { formatDate } from '../../core/dates.js';
 import { tr, tl, getLocale } from '../../i18n/i18n.js';
 
@@ -26,6 +27,8 @@ export function renderOverview() {
   if (m.negative_balance_count) add(tiles, tile({ label: tr('Data check'), value: String(m.negative_balance_count), foot: tr('sale(s) with receipts exceeding the amount — check the source'), cls: 'alert' }));
   add(root, tiles);
   if (m.by_department.length) add(root, departmentCard(m));
+  add(root, roasCalculator());
+  if (adsPeriods().length) add(root, adsCard(adsPeriods()));
 
   const grid = h('div', { class: 'grid cols-2' });
   add(grid, h('div', { class: 'card' }, t('h2', tr('Monthly order value')), t('div', tr('Eligible sales by sale date; the current month is partial.'), 'scope'), trendChart(m.trend, rd)));
@@ -61,3 +64,58 @@ function departmentCard(m) {
         ...(showPay ? [t('td', money(d.period_cash_collected), 'num'), t('td', money(d.outstanding_balance), 'num'), t('td', money(d.overdue_balance), d.overdue_balance > 0 ? 'num alert-text' : 'num')] : []),
         t('td', String(d.pending_count), 'num')))))));
 }
+
+// ROAS per advertising period (the Ads sheet). Rates and targets are fixed; the figures are the sheet's.
+function adsCard(periods) {
+  const pct = n => `${Math.round(n * 1000) / 10}%`;
+  const rm = c => money(c);
+  const funnel = periods.some(p => p.hasFunnel);
+  const head = [tr('Period'), tr('Ad cost incl. tax'), tr('Enquiries'), 'CPM', ...(funnel ? [tr('Deposits'), tr('Submissions')] : []), tr('Total sales'), 'ROAS'];
+  return h('div', { class: 'card ads-card' },
+    t('h2', 'ROAS'),
+    t('div', funnel ? tr('ROAS = total sales × {0} ÷ ad cost incl. tax ({1} tax). Targets: CPM RM {2}, deposits {3}, submissions {4}.', pct(ADS_ROAS_RATE), pct(ADS_TAX_RATE), (ADS_TARGETS.cpm / 100).toFixed(0), ADS_TARGETS.deposits, ADS_TARGETS.submissions) : tr('ROAS = total sales × {0} ÷ ad cost incl. tax ({1} tax). CPM target RM {2}.', pct(ADS_ROAS_RATE), pct(ADS_TAX_RATE), (ADS_TARGETS.cpm / 100).toFixed(0)), 'scope'),
+    h('div', { class: 'table-wrap' }, h('table', {},
+      h('thead', {}, h('tr', {}, ...head.map((x, i) => h('th', { scope: 'col', class: i ? 'num' : '' }, x)))),
+      h('tbody', {}, ...periods.map(p => h('tr', {},
+        h('td', {}, p.period),
+        h('td', { class: 'num' }, rm(p.adCost)),
+        h('td', { class: 'num' }, String(p.enquiries)),
+        h('td', { class: 'num' }, p.cpm === null ? '—' : rm(p.cpm)),
+        ...(funnel ? [h('td', { class: 'num' }, `${p.deposits}/${ADS_TARGETS.deposits}`), h('td', { class: 'num' }, `${p.submissions}/${ADS_TARGETS.submissions}`)] : []),
+        h('td', { class: 'num' }, rm(p.totalSales)),
+        h('td', { class: 'num roas' }, p.roas === null ? '—' : p.roas.toFixed(2))))))));
+}
+
+// A box to type the numbers in and see the ROAS at once. What is typed is kept only while the
+// page is open (not saved to the Excel, not sent anywhere).
+const roasInputs = { adv: '', customers: '', total: '' };
+function roasCalculator() {
+  const num = v => { const n = Number(String(v).replace(/[,\s]/g, '')); return Number.isFinite(n) && n >= 0 ? n : null; };
+  const result = h('div', { class: 'roas-result' });
+  const figures = () => {
+    const adv = num(roasInputs.adv), cust = num(roasInputs.customers), total = num(roasInputs.total);
+    if (adv === null || cust === null || total === null || adv === 0) return null;
+    return adsFigures({ period: '', adFeeBeforeTax: Math.round(adv * 100), enquiries: Math.round(cust), deposits: 0, submissions: 0, pending: 0, approved: 0, broughtForward: 0, totalSales: Math.round(total * 100), cpmStated: null });
+  };
+  const draw = () => {
+    result.textContent = '';
+    const f = figures();
+    if (!f) { add(result, t('p', tr('Type the ad cost and the total sales to see the ROAS.'), 'muted small')); return; }
+    add(result,
+      t('div', `ROAS ${f.roas.toFixed(2)}`, 'roas-value'),
+      t('div', tr('Ad cost incl. tax {0} · CPM {1}', money(f.adCost), f.cpm === null ? '—' : money(f.cpm)), 'small muted'));
+  };
+  const field = (key, label, placeholder) => h('label', { class: 'field' }, t('span', label),
+    h('input', { type: 'text', inputmode: 'decimal', placeholder, value: roasInputs[key], oninput: e => { roasInputs[key] = e.target.value; draw(); } }));
+  draw();
+  return h('div', { class: 'card roas-card' },
+    t('h2', tr('ROAS calculator')),
+    t('div', tr('Type the ad cost before tax, the number of customers and the total sales. The 16% tax and the 0.5% are fixed. Nothing is saved to your Excel.'), 'scope'),
+    h('div', { class: 'roas-inputs' },
+      field('adv', tr('Ad cost before tax (RM)'), '8000'),
+      field('customers', tr('Number of customers'), '95'),
+      field('total', tr('Total sales (RM)'), '17454428')),
+    result,
+    t('div', tr('ROAS = total sales × {0} ÷ ad cost incl. tax ({1} tax).', pct(ADS_ROAS_RATE), pct(ADS_TAX_RATE)), 'small muted'));
+}
+const pct = n => `${Math.round(n * 1000) / 10}%`;

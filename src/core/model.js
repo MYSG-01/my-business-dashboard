@@ -26,7 +26,7 @@ export const ENTITIES = {
     fields: {
       id: { type: 'text', required: true, doc: 'Stable sale/order identifier' },
       customer_id: { type: 'text', doc: 'Reference to customers.id' },
-      date: { type: 'date', required: true, doc: 'Order/booking date' },
+      date: { type: 'date', required: true, doc: 'Order/booking date (the column must exist; a blank cell is allowed for a case with no date yet)' },
       item_id: { type: 'text', doc: 'Reference to stock.id for products' },
       description: { type: 'text', doc: 'Offering name' },
       offering_type: { type: 'enum', values: ['product', 'service'], default: 'product' },

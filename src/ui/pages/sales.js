@@ -15,11 +15,11 @@ export function renderSales() {
   const holder = h('div');
   const draw = () => {
     holder.textContent = '';
-    let rows = (records().sales || []).filter(s => s.date <= reportingDate());
+    let rows = (records().sales || []).filter(s => !s.date || s.date <= reportingDate());
     if (view.filters.channel) rows = rows.filter(s => (s.channel || '') === view.filters.channel);
     if (view.filters.department) rows = rows.filter(s => (s.department || '') === view.filters.department);
     if (view.filters.owner) rows = rows.filter(s => saleOwner(s) === view.filters.owner);
-    if (scope === 'period') rows = rows.filter(s => s.date >= start && s.date <= end);
+    if (scope === 'period') rows = rows.filter(s => s.date && s.date >= start && s.date <= end);
     if (statusSel.value) rows = rows.filter(s => s.status === statusSel.value);
     add(holder, dataTable({ sortKey: 'date', rows, onRow: saleDrawer, columns: [
       { key: 'id', label: 'ID' },

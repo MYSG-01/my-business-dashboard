@@ -181,7 +181,9 @@ export function applyTableMapping(table, rows, pkg) {
         else if (spec.type === 'text') rec[name] = '';
         else rec[name] = null;
       }
-      if (spec.required && (rec[name] === null || rec[name] === '' || rec[name] === undefined)) {
+      // A case may have no date yet (blank cell): it is kept, and left out of date-based figures.
+      const blankDateOk = table.entity === 'sales' && name === 'date';
+      if (spec.required && !blankDateOk && (rec[name] === null || rec[name] === '' || rec[name] === undefined)) {
         issues.push(issue('error', 'missing_required', tr('Row {0} of "{1}": required field {2}.{3} is blank.', r + 1, table.sheet_name, table.entity, name), { table: table.table_id, row: r + 1, field: name }));
         rowFailed = true;
       }

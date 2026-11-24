@@ -2,7 +2,7 @@
 // file bar (your Excel file, read again, forget, clear decisions) and the menu.
 
 import { $, h, t, add, modal, toast } from './dom.js';
-import { view, scenario, openTasks, labelTl, businessName, defaultFilters, absent } from './view-state.js';
+import { view, scenario, openTasks, labelTl, businessName, defaultFilters, absent, switchBusiness } from './view-state.js';
 import { navigate, rerender } from './router.js';
 import { bilingual } from './components.js';
 import { icon } from './icons.js';
@@ -10,6 +10,7 @@ import { pickExcel, forgetExcel, restoreWorkbook } from './pages/excel.js';
 import { formatDate } from '../core/dates.js';
 import { setLocale, getLocale, tr, tl } from '../i18n/i18n.js';
 import { PREFIX } from '../storage/local-state.js';
+import { allBusinessIds, MY_EXCEL, DIVORCE } from '../data/scenarios.js';
 
 // Menu entries: page id → English name (translated with tl, or the business's own label).
 const NAV = [
@@ -44,9 +45,21 @@ export function initShell() {
   // Another tab of this demo changed the saved state: show the same thing here.
   window.addEventListener('storage', e => {
     if (e.key !== null && !e.key.startsWith(PREFIX)) return;
-    if (e.key === null || e.key === `${PREFIX}.workbook`) restoreWorkbook();
+    if (e.key === null || (e.key || '').startsWith(`${PREFIX}.workbook`)) restoreWorkbook();
     rerender();
   });
+}
+
+// Two buttons at the top of the menu: the HDB transfers file and the divorce file.
+function renderBusinessSwitch() {
+  const nav = $('#nav');
+  let box = $('#biz-switch');
+  if (!box) { box = h('div', { id: 'biz-switch', class: 'pill-tabs biz-switch', role: 'group', 'aria-label': tr('Business') }); nav.prepend(box); }
+  box.textContent = '';
+  const names = { [MY_EXCEL]: tl('HDB transfers'), [DIVORCE]: tl('Divorce') };
+  for (const id of allBusinessIds()) {
+    add(box, h('button', { type: 'button', class: view.businessId === id ? 'active' : '', 'aria-pressed': String(view.businessId === id), onclick: () => { if (view.businessId !== id) { switchBusiness(id); navigate('overview'); } } }, names[id]));
+  }
 }
 
 // Runs before every page render so the frame always matches the state.
@@ -57,6 +70,7 @@ export function refreshShell() {
   $('#nav').setAttribute('aria-label', tr('Sections'));
   $('#business-name').textContent = businessName();
   renderRibbon();
+  renderBusinessSwitch();
   renderScenarioBar();
   for (const a of $('#nav').querySelectorAll('a[data-page]')) {
     const entry = NAV.find(([id]) => id === a.dataset.page);

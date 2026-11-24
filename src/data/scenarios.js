@@ -6,25 +6,38 @@
 // One snapshot: the workbook as last read. When an updated workbook is read again, task
 // decisions carry over by their stable keys (rule:record_id).
 
-import { MY_EXCEL, emptyWorkbookProfile } from './workbook.js';
+import { MY_EXCEL, DIVORCE, emptyWorkbookProfile } from './workbook.js';
 import { setCaseWording } from '../i18n/i18n.js';
 
-export { MY_EXCEL };
+export { MY_EXCEL, DIVORCE };
 export const DAYS = ['day1'];
 export const dayNumber = () => 1;
 
-export function allBusinessIds() { return [MY_EXCEL]; }
-export function hasBusiness(id) { return id === MY_EXCEL; }
+// Two businesses, each with its own Excel file: the transfers (MY_EXCEL) and the divorce cases (DIVORCE).
+// Their decisions, notes and AI analyses are kept apart. Only the active one is shown.
+const BUSINESS_IDS = [MY_EXCEL, DIVORCE];
+export function allBusinessIds() { return [...BUSINESS_IDS]; }
+export function hasBusiness(id) { return BUSINESS_IDS.includes(id); }
 
-let workbook = null;
-export function setWorkbookScenario(scenario) {
-  workbook = scenario;
-  setCaseWording((scenario?.records?.sales || []).some(x => x.department));
+const workbooks = new Map();
+let active = MY_EXCEL;
+const hasDepartments = s => (s?.records?.sales || []).some(x => x.department);
+
+export function activeBusinessId() { return active; }
+export function setActiveBusiness(id) {
+  if (!hasBusiness(id)) return;
+  active = id;
+  setCaseWording(hasDepartments(workbooks.get(active)));
 }
-export function workbookLoaded() { return !!workbook; }
 
-export function businessProfile() { return workbook?.profile || emptyWorkbookProfile(); }
-export function dayMetadata() { return workbook?.metadata || { as_of_date: null }; }
+export function setWorkbookScenario(scenario, id = active) {
+  if (scenario) workbooks.set(id, scenario); else workbooks.delete(id);
+  if (id === active) setCaseWording(hasDepartments(scenario));
+}
+export function workbookLoaded(id = active) { return workbooks.has(id); }
 
-// The open workbook as a scenario, or null while none is open.
-export function loadScenario() { return workbook; }
+export function businessProfile(id = active) { return workbooks.get(id)?.profile || emptyWorkbookProfile(); }
+export function dayMetadata(id = active) { return workbooks.get(id)?.metadata || { as_of_date: null }; }
+
+// The open workbook of the active business as a scenario, or null while none is open.
+export function loadScenario(id = active) { return workbooks.get(id) || null; }

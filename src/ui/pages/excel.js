@@ -11,7 +11,7 @@ import { navigate, rerender } from '../router.js';
 import { readWorkbook, workbookScenario, workbookColumns, MY_EXCEL } from '../../data/workbook.js';
 import { ROLE_TEXT, ABSENT_TEXT, FIELD_TEXT, OPTION_TEXT, VALUE_TEXT } from './match-text.js';
 import { ROLES, OPTIONAL_ROLES, roleFields, guessMatching, closestMatching, refreshValues, chooseSheet, chooseColumn, chooseValue, openQuestions, applyMatching, workbookSignature } from '../../data/matching.js';
-import { setWorkbookScenario, loadScenario } from '../../data/scenarios.js';
+import { setWorkbookScenario, loadScenario, allBusinessIds } from '../../data/scenarios.js';
 import { TEMPLATES } from '../../data/templates.generated.js';
 import { tr, tl, sentences } from '../../i18n/i18n.js';
 
@@ -23,8 +23,10 @@ export const pendingMatch = () => pending;
 
 // On start-up: rebuild "My Excel" from the copy remembered in this browser, if any.
 export function restoreWorkbook() {
-  const saved = view.store.workbook();
-  setWorkbookScenario(saved ? workbookScenario(saved) : null);
+  for (const id of allBusinessIds()) {
+    const saved = view.store.workbook(id);
+    setWorkbookScenario(saved ? workbookScenario(saved) : null, id);
+  }
 }
 
 // options.rematch: open the matching page even when a remembered matching fits.
@@ -93,8 +95,7 @@ function useWorkbook(stored, scenario) {
   const fileName = stored.fileName;
   lastProblem = null;
   setWorkbookScenario(scenario);
-  const saved = view.store.saveWorkbook(stored);
-  view.businessId = MY_EXCEL;
+  const saved = view.store.saveWorkbook({ ...stored, businessId: view.businessId });
   view.day = 'day1';
   view.filters = defaultFilters();
   view.calMonth = '';
@@ -112,7 +113,7 @@ export function forgetExcel() {
   modal(tr('Forget this file?'), h('div', {},
     t('p', tr('The dashboard stops showing your Excel and removes its copy from this browser, together with the task decisions, calendar notes and AI analysis you made for it. Your Excel file itself is not changed.'))),
   { actions: [{ label: tl('Forget this file'), danger: true, onclick: () => {
-    view.store.forgetWorkbook(MY_EXCEL);
+    view.store.forgetWorkbook(view.businessId);
     setWorkbookScenario(null);
     lastProblem = null;
     pending = null;

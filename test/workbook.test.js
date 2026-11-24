@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readWorkbook, workbookScenario, workbookColumns, cellValue, SHEETS, MY_EXCEL } from '../src/data/workbook.js';
-import { loadScenario as openScenario, setWorkbookScenario, businessProfile, allBusinessIds } from '../src/data/scenarios.js';
+import { loadScenario as openScenario, setWorkbookScenario, businessProfile, allBusinessIds, DIVORCE } from '../src/data/scenarios.js';
 import { loadScenario } from './support/training.js';
 import { computeMetrics } from '../src/core/metrics.js';
 import { suggestionsFor } from '../src/core/scenario-tasks.js';
@@ -58,8 +58,8 @@ for (const [file, business] of [['BetterSpace_B2C.xlsx', 'b2c'], ['BetterSpace_B
   });
 }
 
-test('the dashboard has one business, the opened workbook, and no built-in data', async () => {
-  assert.deepEqual(allBusinessIds(), [MY_EXCEL]);
+test('the dashboard has two businesses (transfers and divorce), each with its own opened workbook, and no built-in data', async () => {
+  assert.deepEqual(allBusinessIds(), [MY_EXCEL, DIVORCE]);
   setWorkbookScenario(null);
   assert.equal(openScenario(), null, 'nothing open yet: the pages show how to open a file');
   assert.equal(businessProfile().business.short_zh, '我的 Excel');
@@ -267,4 +267,18 @@ test('a Calendar sheet becomes appointments; rows without a date or title are le
   assert.equal(appt.length, 2);
   assert.ok(appt.every(i => i.note === '' && !/\d{3}-\d{7}|\+60/.test(JSON.stringify(i))), 'no phone numbers in calendar items');
   assert.equal(appt[0].type, 'appointment');
+});
+
+// A case with no date yet is kept (its name and fee are shown), but no date-based figure counts it.
+test('a case with a blank date is kept and left out of date-based figures', async () => {
+  const { sheets, missing } = await readWorkbook(bytes('BetterSpace_B2B.xlsx'));
+  const [head, ...rows] = sheets.Sales;
+  const blank = [head, ...rows.slice(0, 1).map(r => r.map((v, i) => (head[i] === 'sale_date' ? '' : v))), ...rows.slice(1)];
+  const withBlank = workbookScenario({ fileName: 'x.xlsx', loadedAt: '', sheets: { ...sheets, Sales: blank }, missing });
+  assert.equal(withBlank.ok, true, JSON.stringify(withBlank.issues.filter(i => i.level === 'error').slice(0, 2)));
+  assert.equal(withBlank.records.sales.length, rows.length, 'the undated case is still a case');
+  const withDate = await open('BetterSpace_B2B.xlsx');
+  const a = computeMetrics(withBlank.records, withBlank.reportingDate, { historyStart: withBlank.historyStart });
+  const b = computeMetrics(withDate.records, withDate.reportingDate, { historyStart: withDate.historyStart });
+  assert.ok(a.all_time_order_value < b.all_time_order_value, 'the undated case is not in the order value');
 });

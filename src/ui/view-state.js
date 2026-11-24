@@ -94,7 +94,7 @@ export function aiMarks() {
 
 // withAi: also the AI's picks (the Calendar page). The request to Gemini uses the plain items.
 export function calendarItems({ withAi = false } = {}) {
-  return buildCalendarItems({ records: records(), metrics: baseMetrics(scenario()), tasks: allTasks(), entries: notes(), reportingDate: reportingDate(), money, ai: withAi ? aiMarks() : null });
+  return buildCalendarItems({ records: records(), metrics: baseMetrics(scenario()), tasks: allTasks(), entries: notes(), reportingDate: reportingDate(), money, ai: withAi ? aiMarks() : null, appointments: scenario()?.appointments || [] });
 }
 
 export function money(cents) { const b = profile().business; return formatMoney(cents, b.currency_symbol || b.currency); }

@@ -625,4 +625,9 @@ export default {
   "The B2B workbook has account owners and follow-up dates; the B2C workbook does not. The Legal workbook (a law firm) adds a department column — 转名, 继承, 离婚 — and has no stock. Each layout works.": "B2B 工作簿有客户负责人和跟进日期，B2C 工作簿没有。Legal 工作簿（律师事务所）多了「部门」一列——转名、继承、离婚——没有库存。每种格式都可以用。",
   "Items with no department (your own notes and tasks, prospects) are always shown.": "不属于任何部门的项目（你自己的备注和待办、潜在客户）会一直显示。",
   "Person handling it": "负责的人（例如负责律师）",
+  "Appointment": "预约",
+  "From the Calendar sheet of your Excel": "来自你 Excel 的 Calendar 工作表",
+  "From the Calendar sheet of your Excel. Change it there and choose Read the Excel again.": "来自你 Excel 的 Calendar 工作表。请在 Excel 里修改，然后选择「重新读取 Excel」。",
+  "{0} row(s) in the Calendar sheet were left out: each needs a date and a title.": "Calendar 工作表有 {0} 行被略过：每行都需要日期和标题。",
+  "No details recorded.": "没有记录详情。",
 };

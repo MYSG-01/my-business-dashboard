@@ -1,7 +1,7 @@
-import { h, t, add, modal, toast } from '../dom.js';
+import { h, t, add, modal, toast, drawer } from '../dom.js';
 import { pageHead, scopeBar, tile, departmentBar } from '../components.js';
 import { icon } from '../icons.js';
-import { view, reportingDate, calendarItems, inDepartment, notes, records, money } from '../view-state.js';
+import { view, reportingDate, calendarItems, inDepartment, notes, records, money, scenario } from '../view-state.js';
 import { saleDrawer, customerDrawer } from '../drawers.js';
 import { navigate, rerender } from '../router.js';
 import { savedMessage } from './tasks.js';
@@ -11,8 +11,8 @@ import { tr, tl, intlLocale } from '../../i18n/i18n.js';
 
 // Calendar: a month grid, a week of columns or a list, plus a panel for the chosen day.
 // Dates only — the records hold no times, so there is no hourly grid.
-const TYPE_LABEL = { payment: () => tr('Payment due'), followup: () => tr('Follow-up'), completion: () => tr('Promised completion'), task: () => tr('Accepted task'), entry: () => tr('Your note') };
-const TYPE_SOURCE = { payment: () => tr('From the sales records'), followup: () => tr('From the customer records'), completion: () => tr('From the sales records'), task: () => tr('Your accepted task'), entry: () => tr('Your note') };
+const TYPE_LABEL = { payment: () => tr('Payment due'), followup: () => tr('Follow-up'), completion: () => tr('Promised completion'), task: () => tr('Accepted task'), entry: () => tr('Your note'), appointment: () => tr('Appointment') };
+const TYPE_SOURCE = { payment: () => tr('From the sales records'), followup: () => tr('From the customer records'), completion: () => tr('From the sales records'), task: () => tr('Your accepted task'), entry: () => tr('Your note'), appointment: () => tr('From the Calendar sheet of your Excel') };
 const MAX_IN_CELL = 3;
 
 const isOverdue = it => it.kind === 'deadline' && it.overdue;
@@ -51,7 +51,7 @@ export function renderCalendar() {
 
   const hasAi = items.some(i => i.ai_why !== undefined);
   const legend = h('div', { class: 'legend' },
-    ...['payment', 'followup', 'completion', 'task', 'entry'].map(type => h('span', { class: `t-${type}` }, TYPE_LABEL[type]())),
+    ...['payment', 'followup', 'completion', 'task', 'entry', 'appointment'].map(type => h('span', { class: `t-${type}` }, TYPE_LABEL[type]())),
     h('span', { class: 'overdue' }, tr('Red outline = past deadline')),
     hasAi ? h('span', { class: 'ai-key' }, aiTag(), tr('picked by the AI analysis')) : null,
     items.some(i => i.suggested) ? h('span', { class: 'suggested-key' }, tr('Dashed = AI suggestion, not accepted yet')) : null);
@@ -149,10 +149,18 @@ function agenda(items, byDate, month, rd, sum, setView) {
 }
 
 function openItem(item) {
+  if (item.kind === 'appointment') return showAppointment(item.id);
   if (item.kind === 'entry') return editNote(notes().find(e => e.entry_id === item.id));
   if (item.kind === 'task') return navigate('tasks');
   if (item.record_type === 'sales') return saleDrawer(records().sales.find(s => s.id === item.record_id));
   return customerDrawer(records().customers.find(c => c.id === item.record_id));
+}
+
+// An appointment from the workbook's Calendar sheet: read-only, details as written in the sheet.
+function showAppointment(id) {
+  const a = (scenario()?.appointments || []).find(x => x.id === id);
+  if (!a) return;
+  drawer(a.title, h('div', { class: 'stack' }, t('p', `${formatDate(a.date)} · ${tr('Appointment')}`, 'muted'), a.detail ? t('p', a.detail) : t('p', tr('No details recorded.'), 'muted'), t('p', tr('From the Calendar sheet of your Excel. Change it there and choose Read the Excel again.'), 'small muted')));
 }
 
 export function editNote(e) {

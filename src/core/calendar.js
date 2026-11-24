@@ -9,7 +9,7 @@ import { tr } from '../i18n/i18n.js';
 // watch: Map(item id → why) }. An item the AI picked gets ai_rank / ai_why; a top pick that is
 // still only a suggestion is shown on its suggested date with suggested: true (dashed, not
 // an appointment until the viewer accepts it).
-export function buildCalendarItems({ records, metrics, tasks, entries = [], reportingDate, symbol = '', money = v => String(v / 100), ai = null }) {
+export function buildCalendarItems({ records, metrics, tasks, entries = [], reportingDate, symbol = '', money = v => String(v / 100), ai = null, appointments = [] }) {
   const items = [];
   const customers = new Map((records.customers || []).map(c => [c.id, c]));
   const push = item => { if (isIsoDate(item.date)) items.push({ ...item, overdue: item.date < reportingDate }); };
@@ -24,6 +24,9 @@ export function buildCalendarItems({ records, metrics, tasks, entries = [], repo
     else if (task.status === 'suggested' && ai?.top.has(task.task_key)) push({ id: task.task_key, date: task.action_date || task.suggested_date, kind: 'task', type: 'task', suggested: true, record_type: task.record_type || '', record_id: task.record_id || '', title: tr('Task (not accepted yet): {0}', task.title), short: task.title, owner: task.owner || '', note: '' });
   }
   for (const entry of entries) if (String(entry.deleted) !== 'TRUE' && entry.deleted !== true) push({ id: entry.entry_id, date: entry.date, kind: 'entry', type: 'entry', title: entry.title, short: entry.title, note: entry.detail || '' });
+  // Appointments from the workbook's Calendar sheet. Only the title is kept here (details such as phone numbers
+  // are read from the workbook when the viewer opens the item), so the AI request never receives them.
+  for (const a of appointments) push({ id: a.id, date: a.date, kind: 'appointment', type: 'appointment', title: a.title, short: a.title, owner: '', note: '' });
   if (ai) for (const it of items) {
     const pick = ai.top.get(it.id);
     if (pick) { it.ai_rank = pick.rank; it.ai_why = pick.why; } else if (ai.watch.has(it.id)) it.ai_why = ai.watch.get(it.id);
